@@ -59,7 +59,9 @@ export function ROMInput() {
                     <SelectContent>
                       {JOINTS.map((joint) => (
                         <SelectGroup key={joint.id}>
-                          <SelectLabel>{joint.label}</SelectLabel>
+                          <SelectLabel className="bg-muted/30 py-2 text-sm font-bold text-foreground">
+                            {joint.label}
+                          </SelectLabel>
                           {joint.movements.map((mv) => (
                             <SelectItem key={mv.id} value={mv.id}>
                               {mv.label}

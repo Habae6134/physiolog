@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select'
 import { ToggleSide } from '@/features/treatments/components/ToggleSide'
 import { JOINTS } from '@/data/joints'
+import { MMT_GRADE_LABELS } from '@/data/evaluation-options'
 import type { Side } from '@/features/treatments/domain/types'
 import type { EvaluationFormValues } from '@/features/evaluations/domain/schema'
 
@@ -59,7 +60,9 @@ export function MMTInput() {
                     <SelectContent>
                       {JOINTS.map((joint) => (
                         <SelectGroup key={joint.id}>
-                          <SelectLabel>{joint.label}</SelectLabel>
+                          <SelectLabel className="bg-muted/30 py-2 text-sm font-bold text-foreground">
+                            {joint.label}
+                          </SelectLabel>
                           {joint.movements.map((mv) => (
                             <SelectItem key={mv.id} value={mv.id}>
                               {mv.label}
@@ -101,7 +104,7 @@ export function MMTInput() {
                     <SelectContent>
                       {GRADES.map((g) => (
                         <SelectItem key={g} value={String(g)}>
-                          {g}등급
+                          {MMT_GRADE_LABELS[g]}
                         </SelectItem>
                       ))}
                     </SelectContent>

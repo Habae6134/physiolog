@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { SIDE_LABEL } from '@/data/body-parts'
 import { getMovementById } from '@/data/joints'
+import { MMT_GRADE_LABELS } from '@/data/evaluation-options'
 import { formatDate } from '@/lib/utils/date'
 import type { Evaluation } from '@/features/evaluations/domain/types'
 
@@ -76,8 +77,14 @@ export function EvaluationDetailSheet({
                         return (
                           <li key={idx} className="flex items-center justify-between text-sm">
                             <span className="font-medium">
-                              {side}
-                              {mv?.movement.label ?? r.jointId}
+                              {mv ? (
+                                <>
+                                  {mv.joint.label} {side}
+                                  {mv.movement.label}
+                                </>
+                              ) : (
+                                r.jointId
+                              )}
                             </span>
                             <span className="text-muted-foreground">
                               {r.active !== undefined && (
@@ -108,10 +115,21 @@ export function EvaluationDetailSheet({
                         return (
                           <li key={idx} className="flex items-center justify-between text-sm">
                             <span className="font-medium">
-                              {side}
-                              {getMovementById(m.jointId)?.movement.label ?? m.jointId}
+                              {(() => {
+                                const mv = getMovementById(m.jointId)
+                                return mv ? (
+                                  <>
+                                    {mv.joint.label} {side}
+                                    {mv.movement.label}
+                                  </>
+                                ) : (
+                                  m.jointId
+                                )
+                              })()}
                             </span>
-                            <Badge variant="outline">{m.grade}등급</Badge>
+                            <Badge variant="outline">
+                              {MMT_GRADE_LABELS[m.grade] ?? `${m.grade}등급`}
+                            </Badge>
                           </li>
                         )
                       })}
