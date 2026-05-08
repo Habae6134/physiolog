@@ -1,0 +1,153 @@
+@AGENTS.md
+
+# physiolog
+
+물리치료사·트레이너용 환자 차팅 앱. 1인당 기록 시간 10~20분 → **5분 이내**로 단축.
+
+## ⚠️ 최우선 규칙
+**모든 코드 작성 전 [PRD.md](./PRD.md) 먼저 확인.**
+스코프 외 기능 추가 금지. 친구의 원본 PRD(`docs/PRD-original-v1.6.md`)는 22주 풀버전 — 우리는 MVP만.
+
+## 사용자 정보
+- 물리치료학과 학생, 시리얼 바이브코더
+- 친구(물리치료사)에게 줘서 실사용 받는 게 목표 (1~2개월)
+- 기존 프로젝트: rom-detector(ROM 측정), taping-master(AR 테이핑), posture-ai(자세 AI)
+- 코드 경험: 보면서 이해 가능, 직접 짜기는 Claude Code 협업
+
+## 기술 스택
+- Next.js 16 + React 19 + TypeScript
+- Tailwind CSS 4 (CSS-first + 디자인 토큰)
+- shadcn/ui (Nova preset, Radix)
+- framer-motion (애니메이션)
+- vaul (모바일 바텀시트)
+- sonner (토스트)
+- react-hook-form + zod (폼 검증)
+- lucide-react (아이콘)
+- recharts (평가 추이 그래프)
+- @serwist/next (PWA)
+- localStorage 기반 (서버 없음, Phase 2에서 Supabase 검토)
+
+## 명령어
+- `npm run dev` — 개발 서버
+- `npm run build` — 빌드
+- `npm run lint`
+
+## 라우트 (App Router)
+- `/` 환자 리스트 (검색 + FAB ➕)
+- `/patients/new` 환자 등록
+- `/patients/[id]` 환자 정보 페이지 (탭: 정보/치료기록/평가기록)
+- `/patients/[id]/treatments/new` 치료기록 작성
+- `/patients/[id]/evaluations/new` 평가기록 입력
+
+## localStorage 키 (직접 접근 금지, `lib/storage/` 래퍼 사용)
+- `physiolog_patients` — 환자 목록 (`Patient[]`)
+- `physiolog_treatments_{patientId}` — 환자별 치료기록 (`Treatment[]`)
+- `physiolog_evaluations_{patientId}` — 환자별 평가기록 (`Evaluation[]`)
+- `physiolog_exercises_favorites` — 자주 쓰는 운동 (빈도순)
+- `physiolog_graph_settings_{patientId}` — 환자별 그래프 표시 항목
+
+## 결정된 기능 (MVP)
+
+### 화면 1: 환자 리스트 `/`
+- 카드 형태 (이름 + 진단명 + 마지막 치료일)
+- 이름 검색창
+- FAB ➕ (하단 플로팅) → 환자 등록
+
+### 화면 2: 환자 정보 `/patients/[id]`
+- 기본정보 11개 필드 (이름·생년월일·성별·연락처·주소·진단명·수술이력·보험·특이사항·치료시작일·담당치료사)
+- 우상단 ✏️ 편집 버튼
+- 탭: [기본정보] [치료기록] [평가기록]
+
+### 화면 3: 치료기록 탭
+- 카드 리스트 (날짜·치료부위·치료방법 / 코멘트 미리보기)
+- 우상단 ➕ 작성
+- **이전 기록 1클릭 복사** 지원 (PRD 핵심)
+
+#### 치료기록 작성 흐름
+1. **치료부위 선택** (다중, 위→아래 순서: 목 → 상지 → 척추/엉덩 → 무릎 → 발목 → 발가락)
+   - 부위별 근육 검색·선택 (Combobox)
+2. **치료방법 선택** (다중 체크박스)
+   - 도수치료 / 전기 / 초음파 / 냉-온치료 / 과제 훈련 / 운동치료
+   - 운동치료 선택 시 → 컨셉(근력·심폐·근지구력·리커버리·균형-기능) + 운동 ➕로 여러 개 추가
+   - 운동 세트·횟수·중량은 메모로 한 번에 입력
+   - 자주 쓰는 운동 즐겨찾기(빈도순)
+3. **당일 코멘트** (환자 반응·특이사항)
+
+### 화면 4: 평가기록 탭
+- 상단: 추이 그래프 (치료사가 표시 항목 직접 선택, 기본 VAS 자동 표시)
+- 하단: 날짜별 평가 결과 리스트
+- 우상단 ➕ 평가 입력
+
+#### 평가 입력 흐름
+- 측정 항목 토글: VAS / ROM(주요 관절만) / MMT / 신체계측
+- 그날 측정한 것만 ON
+- "평가 항목 추가" 버튼 (FMS 등 나중에 확장)
+- 그래프 항목 설정 가능
+
+## MVP 스코프 외 (Phase 2 이후)
+- 로그인/계정 (담당 치료사는 텍스트 필드)
+- 인체 그림 SVG 클릭 (드롭다운으로 시작)
+- AI 요약 (Claude API)
+- 음성 입력 (STT)
+- 클라우드 동기화 (Supabase)
+- PDF/카카오톡 공유
+- 팀 공유·권한 관리
+
+## 폴더 구조 (Feature-Driven)
+```
+src/
+├── app/                          # Next.js App Router
+│   ├── page.tsx                 # 환자 리스트
+│   ├── patients/
+│   │   ├── new/page.tsx
+│   │   └── [id]/
+│   │       ├── page.tsx         # 환자 정보 (탭)
+│   │       ├── treatments/new/page.tsx
+│   │       └── evaluations/new/page.tsx
+│   └── layout.tsx
+├── features/
+│   ├── patients/
+│   │   ├── components/
+│   │   ├── domain/              # 타입·인터페이스
+│   │   └── data/                # localStorage 래퍼
+│   ├── treatments/
+│   │   ├── components/
+│   │   ├── domain/
+│   │   └── data/
+│   └── evaluations/
+│       ├── components/
+│       ├── domain/
+│       └── data/
+├── components/ui/               # shadcn
+├── lib/
+│   ├── storage/                 # localStorage 래퍼 (직접 접근 금지)
+│   └── utils.ts
+└── data/                         # 정적 데이터 (근육 리스트, 관절 리스트 등)
+    ├── muscles.ts               # 부위별 근육 매핑
+    ├── joints.ts                # 주요 관절 (ROM 측정용)
+    └── exercises.ts             # 운동 카테고리
+```
+
+## 디자인 시스템
+- shadcn Nova preset (Lucide + Geist 폰트) 기본
+- 모바일 우선 (병원에서 한손 조작)
+- 치료기록 입력은 vaul 바텀시트로
+- 토스트는 sonner ("저장됨", "삭제됨")
+
+## 코드 규칙
+- 파일 200줄 이내 권장
+- `any` 금지
+- 매직 스트링 금지 → `lib/storage/` 키 상수 사용
+- 모든 폼은 react-hook-form + zod 검증
+- localStorage 직접 접근 금지 → 항상 `lib/storage/` 래퍼 경유
+
+## 작업 순서 (계획)
+1. ✅ 프로젝트 셋업 (Next.js + shadcn/ui + 패키지)
+2. 폴더 구조 + 타입 정의 (Patient, Treatment, Evaluation)
+3. localStorage 래퍼 (`lib/storage/`)
+4. 환자 리스트 + 등록 (화면 1)
+5. 환자 정보 페이지 (화면 2)
+6. 치료기록 (화면 3)
+7. 평가기록 + 그래프 (화면 4)
+8. PWA 설정 (@serwist/next)
+9. 폰에서 테스트

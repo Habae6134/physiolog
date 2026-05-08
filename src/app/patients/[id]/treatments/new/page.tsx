@@ -1,0 +1,118 @@
+'use client'
+
+import { use, useEffect, useState } from 'react'
+import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { ArrowLeft, Copy } from 'lucide-react'
+import { toast } from 'sonner'
+import { TreatmentForm } from '@/features/treatments/components/TreatmentForm'
+import {
+  exerciseFavoritesStore,
+  patientStore,
+  treatmentStore,
+} from '@/lib/storage'
+import type { TreatmentFormValues } from '@/features/treatments/domain/schema'
+import { toISODate } from '@/lib/utils/date'
+import type { Patient } from '@/features/patients/domain/types'
+
+type PageProps = { params: Promise<{ id: string }> }
+
+export default function NewTreatmentPage({ params }: PageProps) {
+  const { id: patientId } = use(params)
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const copyMode = searchParams.get('copy') === '1'
+
+  const [patient, setPatient] = useState<Patient | null | undefined>(undefined)
+  const [defaults, setDefaults] = useState<Partial<TreatmentFormValues>>({})
+
+  useEffect(() => {
+    setPatient(patientStore.getPatient(patientId) ?? null)
+    if (copyMode) {
+      const latest = treatmentStore.getLatestTreatment(patientId)
+      if (latest) {
+        setDefaults({
+          date: toISODate(),
+          bodyParts: latest.bodyParts.map((p) => ({
+            region: p.region,
+            side: p.side ?? 'both',
+            muscles: p.muscles ?? [],
+          })),
+          methods: latest.methods,
+          exerciseConcept: latest.exerciseConcept,
+          exercises: (latest.exercises ?? []).map((e) => ({
+            id: e.id,
+            name: e.name,
+            intensity: e.intensity ?? '',
+          })),
+          comment: latest.comment ?? '',
+        })
+      }
+    }
+  }, [patientId, copyMode])
+
+  function handleSubmit(values: TreatmentFormValues) {
+    const treatment = treatmentStore.createTreatment({
+      patientId,
+      date: values.date,
+      bodyParts: values.bodyParts,
+      methods: values.methods,
+      exerciseConcept: values.exerciseConcept,
+      exercises: values.exercises,
+      comment: values.comment,
+    })
+    // 운동 즐겨찾기 빈도 업데이트
+    values.exercises.forEach((e) => exerciseFavoritesStore.recordExerciseUsage(e.name))
+    toast.success(copyMode ? '복사 저장 완료' : '치료기록 저장됨')
+    void treatment
+    router.replace(`/patients/${patientId}?tab=treatments`)
+  }
+
+  if (patient === undefined) {
+    return (
+      <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+        불러오는 중…
+      </div>
+    )
+  }
+
+  if (patient === null) {
+    return (
+      <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+        환자를 찾을 수 없습니다.
+      </div>
+    )
+  }
+
+  return (
+    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 p-4">
+      <header className="flex items-center gap-2">
+        <Link
+          href={`/patients/${patientId}?tab=treatments`}
+          aria-label="뒤로"
+          className="flex h-9 w-9 items-center justify-center rounded-md transition hover:bg-muted"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Link>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl font-semibold">치료기록 {copyMode ? '복사' : '작성'}</h1>
+          <p className="truncate text-sm text-muted-foreground">{patient.name}</p>
+        </div>
+        {copyMode && (
+          <span className="flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs">
+            <Copy className="h-3 w-3" />이전 기록 복사
+          </span>
+        )}
+      </header>
+
+      <TreatmentForm
+        defaultValues={defaults}
+        submitLabel={copyMode ? '복사 저장' : '저장'}
+        onSubmit={handleSubmit}
+        onCancel={() =>
+          router.replace(`/patients/${patientId}?tab=treatments`)
+        }
+      />
+    </div>
+  )
+}

@@ -1,0 +1,123 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { ClipboardList, Plus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { EvaluationCard } from './EvaluationCard'
+import { EvaluationChart } from './EvaluationChart'
+import { EvaluationDetailSheet } from './EvaluationDetailSheet'
+import { GraphSettingsDialog } from './GraphSettingsDialog'
+import { evaluationStore } from '@/lib/storage'
+import type {
+  Evaluation,
+  GraphMetric,
+} from '@/features/evaluations/domain/types'
+
+type Props = { patientId: string }
+
+export function EvaluationList({ patientId }: Props) {
+  const [evaluations, setEvaluations] = useState<Evaluation[]>([])
+  const [graphMetrics, setGraphMetrics] = useState<GraphMetric[]>([])
+  const [hydrated, setHydrated] = useState(false)
+  const [selected, setSelected] = useState<Evaluation | null>(null)
+
+  useEffect(() => {
+    setEvaluations(evaluationStore.getEvaluations(patientId))
+    setGraphMetrics(evaluationStore.getGraphSettings(patientId).metrics)
+    setHydrated(true)
+  }, [patientId])
+
+  const updateGraph = (metrics: GraphMetric[]) => {
+    evaluationStore.setGraphSettings(patientId, metrics)
+    setGraphMetrics(metrics)
+  }
+
+  const handleDelete = (id: string) => {
+    if (!confirm('이 평가기록을 삭제할까요?')) return
+    evaluationStore.deleteEvaluation(patientId, id)
+    setEvaluations(evaluationStore.getEvaluations(patientId))
+    setSelected(null)
+  }
+
+  const hasAny = evaluations.length > 0
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* 그래프 영역 */}
+      <section className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold">추이 그래프</h3>
+          <GraphSettingsDialog
+            evaluations={evaluations}
+            selected={graphMetrics}
+            onChange={updateGraph}
+          />
+        </div>
+
+        {!hydrated ? (
+          <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
+            불러오는 중…
+          </div>
+        ) : graphMetrics.length === 0 ? (
+          <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
+            표시할 그래프가 없습니다. 평가를 입력하면 그래프 설정에서 선택할 수 있습니다.
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {graphMetrics.map((m, idx) => (
+              <EvaluationChart key={idx} evaluations={evaluations} metric={m} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* 평가 리스트 */}
+      <section className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold">평가 기록</h3>
+          <Button asChild size="sm">
+            <Link href={`/patients/${patientId}/evaluations/new`}>
+              <Plus className="mr-1 h-4 w-4" />평가 입력
+            </Link>
+          </Button>
+        </div>
+
+        {hydrated && !hasAny && (
+          <div className="flex flex-col items-center justify-center gap-3 rounded-md border border-dashed py-12">
+            <ClipboardList
+              className="h-10 w-10 text-muted-foreground/40"
+              strokeWidth={1.5}
+            />
+            <p className="text-sm text-muted-foreground">
+              아직 입력된 평가기록이 없습니다.
+            </p>
+            <Button asChild size="sm">
+              <Link href={`/patients/${patientId}/evaluations/new`}>
+                <Plus className="mr-1 h-4 w-4" />첫 평가 입력
+              </Link>
+            </Button>
+          </div>
+        )}
+
+        {hasAny && (
+          <div className="flex flex-col gap-2">
+            {evaluations.map((e) => (
+              <EvaluationCard
+                key={e.id}
+                evaluation={e}
+                onClick={() => setSelected(e)}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <EvaluationDetailSheet
+        evaluation={selected}
+        onOpenChange={(open) => !open && setSelected(null)}
+        onDelete={handleDelete}
+      />
+    </div>
+  )
+}
