@@ -129,11 +129,12 @@ function buildChart(
   }
 
   if (metric.kind === 'mmt') {
+    const movement = getMovementById(metric.jointId)
     const sideLabel = metric.side ? SIDE_LABEL[metric.side] : ''
     const points: ChartPoint[] = sorted.map((e) => {
       const rec = e.mmt?.find(
         (m) =>
-          m.muscle === metric.muscle &&
+          m.jointId === metric.jointId &&
           (metric.side ? m.side === metric.side : true),
       )
       return {
@@ -143,7 +144,9 @@ function buildChart(
       }
     })
     return {
-      title: `MMT ${sideLabel ? sideLabel + ' ' : ''}${metric.muscle}`,
+      title: `MMT ${sideLabel ? sideLabel + ' ' : ''}${
+        movement?.movement.label ?? metric.jointId
+      }`,
       points: points.filter((p) => p.value !== null),
       domain: [0, 5],
     }

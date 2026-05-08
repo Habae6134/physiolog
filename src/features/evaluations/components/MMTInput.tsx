@@ -7,18 +7,21 @@ import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
 import { ToggleSide } from '@/features/treatments/components/ToggleSide'
+import { JOINTS } from '@/data/joints'
 import type { Side } from '@/features/treatments/domain/types'
 import type { EvaluationFormValues } from '@/features/evaluations/domain/schema'
 
 const GRADES = [0, 1, 2, 3, 4, 5] as const
 
 export function MMTInput() {
-  const { control, watch, setValue, register, formState } =
+  const { control, watch, setValue, formState } =
     useFormContext<EvaluationFormValues>()
   const { fields, append, remove } = useFieldArray({ control, name: 'mmt' })
   const error = formState.errors.mmt
@@ -32,18 +35,40 @@ export function MMTInput() {
       ) : (
         <div className="flex flex-col gap-2">
           {fields.map((field, idx) => {
+            const jointId = watch(`mmt.${idx}.jointId`)
             const side = watch(`mmt.${idx}.side`) ?? 'both'
+            
             return (
               <div
                 key={field.id}
                 className="flex flex-col gap-2 rounded-md border bg-background p-3"
               >
                 <div className="flex items-center gap-2">
-                  <Input
-                    placeholder="근육명 (예: 대퇴사두근)"
-                    {...register(`mmt.${idx}.muscle`)}
-                    className="flex-1"
-                  />
+                  <Select
+                    value={jointId ?? ''}
+                    onValueChange={(v) =>
+                      setValue(`mmt.${idx}.jointId`, v, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
+                    }
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="관절·동작 선택" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {JOINTS.map((joint) => (
+                        <SelectGroup key={joint.id}>
+                          <SelectLabel>{joint.label}</SelectLabel>
+                          {joint.movements.map((mv) => (
+                            <SelectItem key={mv.id} value={mv.id}>
+                              {mv.label}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <Button
                     type="button"
                     variant="ghost"
@@ -93,7 +118,7 @@ export function MMTInput() {
         variant="outline"
         size="sm"
         className="self-start"
-        onClick={() => append({ muscle: '', side: 'both', grade: 5 })}
+        onClick={() => append({ jointId: '', side: 'both', grade: 5 })}
       >
         <Plus className="mr-1 h-4 w-4" />MMT 추가
       </Button>

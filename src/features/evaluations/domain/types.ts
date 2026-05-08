@@ -10,7 +10,7 @@ export type ROMRecord = {
 export type MMTGrade = 0 | 1 | 2 | 3 | 4 | 5
 
 export type MMTRecord = {
-  muscle: string               // 근육명
+  jointId: string               // joints.ts의 id 참조
   side?: Side
   grade: MMTGrade
 }
@@ -47,7 +47,7 @@ export type EvaluationInput = Omit<Evaluation, 'id' | 'createdAt'>
 export type GraphMetric =
   | { kind: 'vas' }
   | { kind: 'rom'; jointId: string; side?: Side; mode: 'active' | 'passive' }
-  | { kind: 'mmt'; muscle: string; side?: Side }
+  | { kind: 'mmt'; jointId: string; side?: Side }
   | { kind: 'measurement'; type: BodyMeasurementType; location: string }
   | { kind: 'custom'; name: string }
 

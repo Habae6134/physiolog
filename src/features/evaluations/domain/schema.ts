@@ -10,7 +10,7 @@ export const romRecordSchema = z.object({
 })
 
 export const mmtRecordSchema = z.object({
-  muscle: z.string().trim().min(1),
+  jointId: z.string().min(1),
   side: sideEnum,
   grade: z.number().int().min(0).max(5),
 })

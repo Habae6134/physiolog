@@ -60,14 +60,15 @@ export function extractGraphOptions(evaluations: Evaluation[]): GraphOption[] {
     }
   }
 
-  // MMT — (muscle, side)
+  // MMT — (jointId, side)
   for (const e of evaluations) {
     for (const m of e.mmt ?? []) {
       const side = m.side ?? 'both'
-      const label = `MMT ${side !== 'both' ? SIDE_LABEL[side] + ' ' : ''}${m.muscle}`
+      const mv = getMovementById(m.jointId)
+      const label = `MMT ${side !== 'both' ? SIDE_LABEL[side] + ' ' : ''}${mv?.movement.label ?? m.jointId}`
       push({
-        key: `mmt:${m.muscle}:${side}`,
-        metric: { kind: 'mmt', muscle: m.muscle, side },
+        key: `mmt:${m.jointId}:${side}`,
+        metric: { kind: 'mmt', jointId: m.jointId, side },
         label,
       })
     }
@@ -108,7 +109,7 @@ export function metricKey(m: GraphMetric): string {
     case 'rom':
       return `rom:${m.jointId}:${m.side ?? 'both'}:${m.mode}`
     case 'mmt':
-      return `mmt:${m.muscle}:${m.side ?? 'both'}`
+      return `mmt:${m.jointId}:${m.side ?? 'both'}`
     case 'measurement':
       return `measurement:${m.type}:${m.location}`
     case 'custom':

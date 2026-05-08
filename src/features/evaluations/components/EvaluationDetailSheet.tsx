@@ -109,7 +109,7 @@ export function EvaluationDetailSheet({
                           <li key={idx} className="flex items-center justify-between text-sm">
                             <span className="font-medium">
                               {side}
-                              {m.muscle}
+                              {getMovementById(m.jointId)?.movement.label ?? m.jointId}
                             </span>
                             <Badge variant="outline">{m.grade}등급</Badge>
                           </li>
