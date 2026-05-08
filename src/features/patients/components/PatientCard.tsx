@@ -15,7 +15,7 @@ type Props = {
 
 export function PatientCard({ patient, lastTreatmentDate }: Props) {
   const age = calcAge(patient.birthDate)
-  const isInactive = patient.status !== 'active'
+  const isInactive = patient.status !== 'new'
 
   return (
     <Link href={`/patients/${patient.id}`} className="block">

@@ -62,8 +62,8 @@ export function PatientForm({
   onSubmit,
   onCancel,
 }: Props) {
-  const form = useForm<PatientFormValues>({
-    resolver: zodResolver(patientFormSchema),
+  const form = useForm<PatientFormValues, unknown, PatientFormValues>({
+    resolver: zodResolver(patientFormSchema) as any,
     defaultValues: { ...EMPTY_DEFAULTS, ...defaultValues },
   })
 

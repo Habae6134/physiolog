@@ -1,6 +1,8 @@
 'use client'
 
 import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { BODY_REGION_LABEL, SIDE_LABEL } from '@/data/body-parts'
 import {

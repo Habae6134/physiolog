@@ -56,11 +56,11 @@ export default function EditTreatmentPage({ params }: PageProps) {
 
   const defaultValues: Partial<TreatmentFormValues> = {
     date: treatment.date,
-    bodyParts: treatment.bodyParts,
+    bodyParts: treatment.bodyParts as TreatmentFormValues['bodyParts'],
     methods: treatment.methods,
     otherTreatmentMethod: treatment.otherTreatmentMethod,
     exerciseConcept: treatment.exerciseConcept,
-    exercises: treatment.exercises,
+    exercises: (treatment.exercises ?? []) as TreatmentFormValues['exercises'],
     comment: treatment.comment,
   }
 

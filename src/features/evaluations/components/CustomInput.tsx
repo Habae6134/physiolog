@@ -10,7 +10,7 @@ import type { FavoriteEvaluationEntry } from '@/lib/storage/evaluation-favorites
 import type { EvaluationFormValues } from '@/features/evaluations/domain/schema'
 
 export function CustomInput() {
-  const { control, register, formState } = useFormContext<EvaluationFormValues>()
+  const { control, register, formState, watch } = useFormContext<EvaluationFormValues>()
   const { fields, append, remove } = useFieldArray({ control, name: 'custom' })
   const error = formState.errors.custom
 
