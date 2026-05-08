@@ -72,7 +72,7 @@ export default function PatientDetailPage({ params }: PageProps) {
         </div>
         <Button asChild variant="outline" size="sm">
           <Link href={`/patients/${patient.id}/edit`}>
-            <Pencil className="mr-1 h-4 w-4" />편집
+            <Pencil className="mr-1 h-4 w-4" />환자정보수정
           </Link>
         </Button>
       </header>
