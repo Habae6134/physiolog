@@ -47,7 +47,7 @@ export function EvaluationList({ patientId }: Props) {
       {/* 그래프 영역 */}
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold">추이 그래프</h3>
+          <h3 className="text-sm font-semibold">회복 그래프</h3>
           <GraphSettingsDialog
             evaluations={evaluations}
             selected={graphMetrics}

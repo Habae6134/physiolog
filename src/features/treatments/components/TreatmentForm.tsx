@@ -29,6 +29,7 @@ const EMPTY_DEFAULTS: TreatmentFormValues = {
   methods: [],
   exerciseConcept: undefined,
   exercises: [],
+  homework: '',
   comment: '',
 }
 
@@ -94,6 +95,16 @@ export function TreatmentForm({
             </Section>
           </>
         )}
+
+        <Separator />
+
+        <Section title="숙제" subtitle="과제·운동 등">
+          <Textarea
+            rows={3}
+            placeholder="예: 집에서 아침/저녁으로 폼롤러 스트레칭 10분 수행"
+            {...form.register('homework')}
+          />
+        </Section>
 
         <Separator />
 

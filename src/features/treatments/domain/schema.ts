@@ -55,6 +55,7 @@ export const treatmentFormSchema = z
     otherTreatmentMethod: z.string().trim().optional(),
     exerciseConcept: exerciseConceptEnum.optional(),
     exercises: z.array(exerciseSchema),
+    homework: z.string().trim(),
     comment: z.string().trim(),
   })
   .refine(

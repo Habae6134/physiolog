@@ -16,6 +16,7 @@ import { SIDE_LABEL } from '@/data/body-parts'
 import { getMovementById } from '@/data/joints'
 import { MMT_GRADE_LABELS } from '@/data/evaluation-options'
 import { formatDate } from '@/lib/utils/date'
+import { BodyMap } from './BodyMap'
 import type { Evaluation } from '@/features/evaluations/domain/types'
 
 type Props = {
@@ -157,6 +158,22 @@ export function EvaluationDetailSheet({
                         </li>
                       ))}
                     </ul>
+                  </Section>
+                </>
+              )}
+
+              {evaluation.painMapping && evaluation.painMapping.length > 0 && (
+                <>
+                  <Separator />
+                  <Section title="바디 매핑 (통증 양상)">
+                    <div className="mt-2 flex flex-col items-center pointer-events-none">
+                      <div className="w-full max-w-[200px] scale-75 origin-top">
+                        <BodyMap 
+                          value={evaluation.painMapping} 
+                          onChange={() => {}} 
+                        />
+                      </div>
+                    </div>
                   </Section>
                 </>
               )}

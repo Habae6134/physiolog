@@ -29,6 +29,16 @@ export type CustomEval = {
   value: string                // 자유 입력
 }
 
+export type PainPattern = 'referred' | 'tingling' | 'weakness' | 'paresthesia'
+
+export type PainArea = {
+  id: string                   // 부위 ID (예: 'shoulder_l')
+  label: string                // 부위 이름 (예: '왼쪽 어깨')
+  pattern: PainPattern         // 통증 양상
+  intensity: number            // 통증 강도 (1~10)
+  radiationTo?: string[]       // 저림 등이 퍼지는 부위 ID들
+}
+
 export type Evaluation = {
   id: string
   patientId: string
@@ -37,6 +47,7 @@ export type Evaluation = {
   rom?: ROMRecord[]
   mmt?: MMTRecord[]
   bodyMeasurement?: BodyMeasurement[]
+  painMapping?: PainArea[]     // 바디 매핑 데이터
   custom?: CustomEval[]
   createdAt: string
 }

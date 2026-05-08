@@ -49,6 +49,7 @@ export type Treatment = {
   otherTreatmentMethod?: string // 기타 치료방법 (텍스트)
   exerciseConcept?: ExerciseConcept
   exercises?: Exercise[]
+  homework?: string            // 숙제 (과제·운동 등)
   comment?: string             // 당일 코멘트 (환자 반응·특이사항)
   createdAt: string
 }

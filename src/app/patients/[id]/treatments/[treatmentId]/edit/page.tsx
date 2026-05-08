@@ -32,6 +32,7 @@ export default function EditTreatmentPage({ params }: PageProps) {
       otherTreatmentMethod: values.otherTreatmentMethod,
       exerciseConcept: values.exerciseConcept,
       exercises: values.exercises,
+      homework: values.homework,
       comment: values.comment,
     })
     toast.success('치료기록 수정됨')
@@ -61,6 +62,7 @@ export default function EditTreatmentPage({ params }: PageProps) {
     otherTreatmentMethod: treatment.otherTreatmentMethod,
     exerciseConcept: treatment.exerciseConcept,
     exercises: (treatment.exercises ?? []) as TreatmentFormValues['exercises'],
+    homework: treatment.homework ?? '',
     comment: treatment.comment,
   }
 

@@ -11,6 +11,7 @@ import { VASInput } from './VASInput'
 import { ROMInput } from './ROMInput'
 import { MMTInput } from './MMTInput'
 import { MeasurementInput } from './MeasurementInput'
+import { BodyMap } from './BodyMap'
 import { CustomInput } from './CustomInput'
 import { toISODate } from '@/lib/utils/date'
 import {
@@ -23,6 +24,7 @@ type ToggleName =
   | 'toggleRom'
   | 'toggleMmt'
   | 'toggleMeasurement'
+  | 'togglePainMapping'
   | 'toggleCustom'
 
 const EMPTY_DEFAULTS: EvaluationFormValues = {
@@ -35,6 +37,8 @@ const EMPTY_DEFAULTS: EvaluationFormValues = {
   mmt: [],
   toggleMeasurement: false,
   measurement: [],
+  togglePainMapping: false,
+  painMapping: [],
   toggleCustom: false,
   custom: [],
 }
@@ -110,6 +114,17 @@ export function EvaluationForm({
           name="toggleMeasurement"
         >
           <MeasurementInput />
+        </ToggleSection>
+
+        <ToggleSection
+          title="바디 매핑 (통증 부위)"
+          subtitle="통증 부위 및 양상 선택"
+          name="togglePainMapping"
+        >
+          <BodyMap 
+            value={form.watch('painMapping')} 
+            onChange={(v) => form.setValue('painMapping', v, { shouldDirty: true })} 
+          />
         </ToggleSection>
 
         <ToggleSection

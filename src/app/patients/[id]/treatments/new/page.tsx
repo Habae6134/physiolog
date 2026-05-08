@@ -55,6 +55,7 @@ export default function NewTreatmentPage({ params }: PageProps) {
           name: e.name,
           intensity: e.intensity ?? '',
         })),
+        homework: sourceRecord.homework ?? '',
         comment: sourceRecord.comment ?? '',
       })
     }
@@ -68,6 +69,7 @@ export default function NewTreatmentPage({ params }: PageProps) {
       methods: values.methods,
       exerciseConcept: values.exerciseConcept,
       exercises: values.exercises,
+      homework: values.homework,
       comment: values.comment,
     })
     // 운동 즐겨찾기 빈도 업데이트

@@ -114,6 +114,17 @@ export function TreatmentDetailSheet({ treatment, onOpenChange, onDelete }: Prop
                 </>
               )}
 
+              {treatment.homework && (
+                <>
+                  <Separator />
+                  <Section title="숙제">
+                    <p className="whitespace-pre-wrap text-sm">
+                      {treatment.homework}
+                    </p>
+                  </Section>
+                </>
+              )}
+
               {treatment.comment && (
                 <>
                   <Separator />

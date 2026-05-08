@@ -1,0 +1,63 @@
+/* 연관통: 빨간색 방사형 글로우 펄스 */
+@keyframes pulse-referred {
+  0% { fill: rgba(239, 68, 68, 0.4); filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.6)); }
+  50% { fill: rgba(239, 68, 68, 0.8); filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.9)); }
+  100% { fill: rgba(239, 68, 68, 0.4); filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.6)); }
+}
+
+/* 저림: 파란색 전기 스파크 애니메이션 */
+@keyframes tingling-electric {
+  0% { stroke: #60a5fa; stroke-width: 2.5; opacity: 0.6; filter: drop-shadow(0 0 2px #3b82f6); }
+  50% { stroke: #93c5fd; stroke-width: 4.5; opacity: 1; filter: drop-shadow(0 0 8px #3b82f6); }
+  100% { stroke: #60a5fa; stroke-width: 2.5; opacity: 0.6; filter: drop-shadow(0 0 2px #3b82f6); }
+}
+
+/* 힘빠짐: 불투명 및 흐림 효과 */
+@keyframes weakness-fade {
+  0% { opacity: 0.7; filter: grayscale(40%) blur(1px); }
+  50% { opacity: 0.4; filter: grayscale(90%) blur(3px); }
+  100% { opacity: 0.7; filter: grayscale(40%) blur(1px); }
+}
+
+/* 이상감각: 보라색 도트 깜빡임 느낌 */
+@keyframes paresthesia-purple {
+  0% { fill: #a78bfa; opacity: 0.5; filter: drop-shadow(0 0 3px #8b5cf6); }
+  50% { fill: #c4b5fd; opacity: 0.9; filter: drop-shadow(0 0 10px #8b5cf6); }
+  100% { fill: #a78bfa; opacity: 0.5; filter: drop-shadow(0 0 3px #8b5cf6); }
+}
+
+.pain-referred {
+  animation: pulse-referred 2.2s infinite ease-in-out;
+}
+
+.pain-tingling {
+  animation: tingling-electric 0.4s infinite alternate;
+  fill: rgba(59, 130, 246, 0.25);
+  stroke: #3b82f6;
+}
+
+.pain-weakness {
+  animation: weakness-fade 3.5s infinite ease-in-out;
+  fill: #94a3b8 !important;
+}
+
+.pain-paresthesia {
+  animation: paresthesia-purple 1.8s infinite ease-in-out;
+}
+
+.body-part {
+  transition: all 0.3s ease;
+  cursor: pointer;
+  stroke-linejoin: round;
+  fill: #f1f5f9;
+}
+
+.body-part:hover {
+  fill: #e2e8f0;
+  stroke-width: 1.5;
+}
+
+.body-part.selected {
+  stroke: #0f172a;
+  stroke-width: 2.5;
+}

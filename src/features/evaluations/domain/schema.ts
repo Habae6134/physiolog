@@ -27,6 +27,14 @@ export const customEvalSchema = z.object({
   value: z.string().trim().min(1, '값을 입력하세요'),
 })
 
+export const painAreaSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  pattern: z.enum(['referred', 'tingling', 'weakness', 'paresthesia']),
+  intensity: z.number().min(1).max(10),
+  radiationTo: z.array(z.string()).optional(),
+})
+
 export const evaluationFormSchema = z
   .object({
     date: z.string().min(1, '날짜를 선택하세요'),
@@ -38,6 +46,8 @@ export const evaluationFormSchema = z
     mmt: z.array(mmtRecordSchema),
     toggleMeasurement: z.boolean(),
     measurement: z.array(bodyMeasurementSchema),
+    togglePainMapping: z.boolean(),
+    painMapping: z.array(painAreaSchema),
     toggleCustom: z.boolean(),
     custom: z.array(customEvalSchema),
   })
@@ -47,6 +57,7 @@ export const evaluationFormSchema = z
       d.toggleRom ||
       d.toggleMmt ||
       d.toggleMeasurement ||
+      d.togglePainMapping ||
       d.toggleCustom,
     {
       message: '측정한 항목을 1개 이상 켜세요',
