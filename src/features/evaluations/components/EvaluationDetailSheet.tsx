@@ -41,7 +41,7 @@ export function EvaluationDetailSheet({
               <div className="flex items-center justify-between pr-8">
                 <div>
                   <SheetTitle>{formatDate(evaluation.date)}</SheetTitle>
-                  <SheetDescription>평가기록 상세</SheetDescription>
+                  <SheetDescription>검사 상세</SheetDescription>
                 </div>
                 <Button asChild variant="outline" size="sm" className="h-8 px-2">
                   <Link
@@ -165,12 +165,31 @@ export function EvaluationDetailSheet({
               {evaluation.painMapping && evaluation.painMapping.length > 0 && (
                 <>
                   <Separator />
-                  <Section title="바디 매핑 (통증 양상)">
-                    <div className="mt-2 flex flex-col items-center pointer-events-none">
-                      <div className="w-full max-w-[200px] scale-75 origin-top">
-                        <BodyMap 
-                          value={evaluation.painMapping} 
-                          onChange={() => {}} 
+                  <Section title="통증 상세">
+                    <div className="mt-4 grid grid-cols-1 gap-2">
+                      {evaluation.painMapping.map((p) => (
+                        <div key={p.id} className="flex items-center justify-between rounded-lg border bg-muted/30 p-2.5 text-sm">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="font-semibold text-foreground">{p.label}</span>
+                            <span className={`text-xs ${getPainColor(p.pattern)}`}>
+                              {p.pattern === 'custom' ? (p.customPatternLabel || '기타') : patternLabel(p.pattern)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs text-muted-foreground font-medium">VAS</span>
+                            <span className="text-lg font-bold text-primary">{p.intensity}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <div className="mt-6 flex flex-col items-center pointer-events-none border-t pt-6 bg-slate-50/50 rounded-b-xl">
+                      <p className="text-[10px] text-muted-foreground mb-2">통증 부위 가시화</p>
+                      <div className="w-full max-w-[220px]">
+                        <BodyMap
+                          value={evaluation.painMapping}
+                          onChange={() => {}}
+                          readOnly={true}
                         />
                       </div>
                     </div>
@@ -206,7 +225,7 @@ export function EvaluationDetailSheet({
                     className="text-destructive hover:text-destructive"
                     onClick={() => onDelete(evaluation.id)}
                   >
-                    <Trash2 className="mr-1 h-4 w-4" />이 기록 삭제
+                    <Trash2 className="mr-1 h-4 w-4" />검사 삭제
                   </Button>
                 </>
               )}
@@ -231,4 +250,29 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <div className="mt-1.5">{children}</div>
     </section>
   )
+}
+function patternLabel(p: string) {
+  switch (p) {
+    case 'referred': return '연관통'
+    case 'tingling': return '저림'
+    case 'weakness': return '힘빠짐'
+    case 'paresthesia': return '이상감각'
+    case 'radiating': return '방사통'
+    case 'sharp': return '날카로운 통증'
+    case 'custom': return '기타'
+    default: return p
+  }
+}
+
+function getPainColor(p: string) {
+  switch (p) {
+    case 'referred': return 'text-red-500'
+    case 'tingling': return 'text-blue-500'
+    case 'weakness': return 'text-indigo-600'
+    case 'paresthesia': return 'text-purple-500'
+    case 'radiating': return 'text-orange-500'
+    case 'sharp': return 'text-yellow-500'
+    case 'custom': return 'text-teal-500'
+    default: return ''
+  }
 }

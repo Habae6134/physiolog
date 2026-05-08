@@ -29,7 +29,7 @@ type ToggleName =
 
 const EMPTY_DEFAULTS: EvaluationFormValues = {
   date: toISODate(),
-  toggleVas: true,
+  toggleVas: false,
   vas: undefined,
   toggleRom: false,
   rom: [],
@@ -37,7 +37,7 @@ const EMPTY_DEFAULTS: EvaluationFormValues = {
   mmt: [],
   toggleMeasurement: false,
   measurement: [],
-  togglePainMapping: false,
+  togglePainMapping: true,
   painMapping: [],
   toggleCustom: false,
   custom: [],
@@ -85,14 +85,6 @@ export function EvaluationForm({
         <Separator />
 
         <ToggleSection
-          title="VAS (통증 점수)"
-          subtitle="0~10"
-          name="toggleVas"
-        >
-          <VASInput />
-        </ToggleSection>
-
-        <ToggleSection
           title="ROM (관절가동범위)"
           subtitle="주요 관절·동작별 각도"
           name="toggleRom"
@@ -117,22 +109,22 @@ export function EvaluationForm({
         </ToggleSection>
 
         <ToggleSection
-          title="바디 매핑 (통증 부위)"
-          subtitle="통증 부위 및 양상 선택"
+          title="커스텀 평가"
+          subtitle="특수검사 등 자유 평가입력"
+          name="toggleCustom"
+        >
+          <CustomInput />
+        </ToggleSection>
+
+        <ToggleSection
+          title="통증"
+          subtitle="통증 부위 및 양상 (VAS 포함)"
           name="togglePainMapping"
         >
           <BodyMap 
             value={form.watch('painMapping')} 
             onChange={(v) => form.setValue('painMapping', v, { shouldDirty: true })} 
           />
-        </ToggleSection>
-
-        <ToggleSection
-          title="커스텀 평가"
-          subtitle="특수검사 등 자유 평가입력"
-          name="toggleCustom"
-        >
-          <CustomInput />
         </ToggleSection>
 
         {errors.toggleVas?.message && (

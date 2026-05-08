@@ -30,8 +30,9 @@ export const customEvalSchema = z.object({
 export const painAreaSchema = z.object({
   id: z.string(),
   label: z.string(),
-  pattern: z.enum(['referred', 'tingling', 'weakness', 'paresthesia']),
-  intensity: z.number().min(1).max(10),
+  pattern: z.enum(['referred', 'tingling', 'weakness', 'paresthesia', 'radiating', 'sharp', 'custom']),
+  intensity: z.number().min(0).max(10),
+  customPatternLabel: z.string().optional(),
   radiationTo: z.array(z.string()).optional(),
 })
 
@@ -81,7 +82,7 @@ export const evaluationFormSchema = z
     path: ['measurement'],
   })
   .refine((d) => !d.toggleCustom || d.custom.length > 0, {
-    message: '커스텀 평가 항목을 1개 이상 추가하세요',
+    message: '커스텀 검사 항목을 1개 이상 추가하세요',
     path: ['custom'],
   })
 

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Plus, Search, Users } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { ApiKeyDialog } from '@/components/ApiKeyDialog'
 import { PatientCard } from './PatientCard'
 import { patientStore, treatmentStore } from '@/lib/storage'
 import type { Patient } from '@/features/patients/domain/types'
@@ -38,8 +39,9 @@ export function PatientList() {
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 p-4 pb-24">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">환자</h1>
-        <div className="text-sm text-muted-foreground">
-          총 {patients.length}명
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">총 {patients.length}명</span>
+          <ApiKeyDialog />
         </div>
       </header>
 

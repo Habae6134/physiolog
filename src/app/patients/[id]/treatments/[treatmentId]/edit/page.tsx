@@ -35,7 +35,7 @@ export default function EditTreatmentPage({ params }: PageProps) {
       homework: values.homework,
       comment: values.comment,
     })
-    toast.success('치료기록 수정됨')
+    toast.success('치료 수정됨')
     router.replace(`/patients/${patientId}?tab=treatments`)
   }
 

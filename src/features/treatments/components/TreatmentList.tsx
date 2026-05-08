@@ -43,7 +43,7 @@ export function TreatmentList({ patientId }: Props) {
   const hasAny = treatments.length > 0
 
   const handleDelete = (id: string) => {
-    if (!confirm('이 치료기록을 삭제할까요?')) return
+    if (!confirm('이 치료를 삭제할까요?')) return
     treatmentStore.deleteTreatment(patientId, id)
     setTreatments(treatmentStore.getTreatments(patientId))
     setSelected(null)
@@ -98,11 +98,7 @@ export function TreatmentList({ patientId }: Props) {
               </PopoverContent>
             </Popover>
           )}
-          <Button asChild size="sm">
-            <Link href={`/patients/${patientId}/treatments/new`}>
-              <Plus className="mr-1 h-4 w-4" />작성
-            </Link>
-          </Button>
+          <Button asChild size="sm"><Link href={`/patients/${patientId}/treatments/new`}><Plus className="mr-1 h-4 w-4" />작성</Link></Button>
         </div>
       </div>
 
@@ -113,13 +109,9 @@ export function TreatmentList({ patientId }: Props) {
             strokeWidth={1.5}
           />
           <p className="text-sm text-muted-foreground">
-            아직 작성된 치료기록이 없습니다.
+            아직 작성된 치료가 없습니다.
           </p>
-          <Button asChild size="sm">
-            <Link href={`/patients/${patientId}/treatments/new`}>
-              <Plus className="mr-1 h-4 w-4" />첫 치료기록 작성
-            </Link>
-          </Button>
+          <Button asChild size="sm"><Link href={`/patients/${patientId}/treatments/new`}><Plus className="mr-1 h-4 w-4" />첫 치료 작성</Link></Button>
         </div>
       )}
 

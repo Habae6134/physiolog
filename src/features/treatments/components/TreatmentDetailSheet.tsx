@@ -37,7 +37,7 @@ export function TreatmentDetailSheet({ treatment, onOpenChange, onDelete }: Prop
               <div className="flex items-center justify-between pr-8">
                 <div>
                   <SheetTitle>{formatDate(treatment.date)}</SheetTitle>
-                  <SheetDescription>치료기록 상세</SheetDescription>
+                  <SheetDescription>치료 상세</SheetDescription>
                 </div>
                 <Button asChild variant="outline" size="sm" className="h-8 px-2">
                   <Link
@@ -145,7 +145,7 @@ export function TreatmentDetailSheet({ treatment, onOpenChange, onDelete }: Prop
                     className="text-destructive hover:text-destructive"
                     onClick={() => onDelete(treatment.id)}
                   >
-                    <Trash2 className="mr-1 h-4 w-4" />이 기록 삭제
+                    <Trash2 className="mr-1 h-4 w-4" />치료 삭제
                   </Button>
                 </>
               )}

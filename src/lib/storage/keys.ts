@@ -5,4 +5,5 @@ export const STORAGE_KEYS = {
   exerciseFavorites: 'physiolog_exercises_favorites',
   evaluationFavorites: 'physiolog_evaluations_favorites',
   graphSettings: (patientId: string) => `physiolog_graph_settings_${patientId}`,
+  icf: (patientId: string) => `physiolog_icf_${patientId}`,
 } as const

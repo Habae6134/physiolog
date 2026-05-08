@@ -33,9 +33,10 @@ export default function EditEvaluationPage({ params }: PageProps) {
         ? values.mmt.map((m) => ({ ...m, grade: m.grade as MMTGrade }))
         : undefined,
       bodyMeasurement: values.toggleMeasurement ? values.measurement : undefined,
+      painMapping: values.togglePainMapping ? values.painMapping : undefined,
       custom: values.toggleCustom ? values.custom : undefined,
     })
-    toast.success('평가기록 수정됨')
+    toast.success('검사 수정됨')
     router.replace(`/patients/${patientId}?tab=evaluations`)
   }
 
@@ -50,7 +51,7 @@ export default function EditEvaluationPage({ params }: PageProps) {
   if (patient === null || evaluation === null) {
     return (
       <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-        평가 정보를 찾을 수 없습니다.
+        검사 정보를 찾을 수 없습니다.
       </div>
     )
   }
@@ -67,6 +68,8 @@ export default function EditEvaluationPage({ params }: PageProps) {
     measurement: evaluation.bodyMeasurement ?? [],
     toggleCustom: evaluation.custom !== undefined && evaluation.custom.length > 0,
     custom: evaluation.custom ?? [],
+    togglePainMapping: evaluation.painMapping !== undefined && evaluation.painMapping.length > 0,
+    painMapping: evaluation.painMapping ?? [],
   }
 
   return (
@@ -80,7 +83,7 @@ export default function EditEvaluationPage({ params }: PageProps) {
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div className="min-w-0 flex-1">
-          <h1 className="text-xl font-semibold">평가 수정</h1>
+          <h1 className="text-xl font-semibold">검사 수정</h1>
           <p className="truncate text-sm text-muted-foreground">{patient.name}</p>
         </div>
       </header>

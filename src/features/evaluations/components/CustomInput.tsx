@@ -34,7 +34,7 @@ export function CustomInput() {
     <div className="flex flex-col gap-3">
       {fields.length === 0 ? (
         <p className="rounded-md border border-dashed py-4 text-center text-sm text-muted-foreground">
-          커스텀 평가 항목 없음 (예: 특수검사 등)
+          커스텀 검사 항목 없음 (예: 특수검사 등)
         </p>
       ) : (
         <div className="flex flex-col gap-2">
@@ -93,7 +93,7 @@ export function CustomInput() {
         className="self-start"
         onClick={() => handleAdd()}
       >
-        <Plus className="mr-1 h-4 w-4" />평가 항목 추가
+        <Plus className="mr-1 h-4 w-4" />검사 항목 추가
       </Button>
 
       {error && typeof error.message === 'string' && (

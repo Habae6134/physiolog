@@ -9,12 +9,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PatientInfo } from '@/features/patients/components/PatientInfo'
 import { TreatmentList } from '@/features/treatments/components/TreatmentList'
 import { EvaluationList } from '@/features/evaluations/components/EvaluationList'
+import { IcfTab } from '@/features/icf/components/IcfTab'
 import { patientStore } from '@/lib/storage'
 import type { Patient } from '@/features/patients/domain/types'
 
 type PageProps = { params: Promise<{ id: string }> }
 
-const VALID_TABS = new Set(['info', 'treatments', 'evaluations'])
+const VALID_TABS = new Set(['info', 'treatments', 'evaluations', 'icf'])
 
 export default function PatientDetailPage({ params }: PageProps) {
   const { id } = use(params)
@@ -70,11 +71,7 @@ export default function PatientDetailPage({ params }: PageProps) {
           </Link>
           <h1 className="truncate text-xl font-semibold">{patient.name}</h1>
         </div>
-        <Button asChild variant="outline" size="sm">
-          <Link href={`/patients/${patient.id}/edit`}>
-            <Pencil className="mr-1 h-4 w-4" />환자정보수정
-          </Link>
-        </Button>
+        <Button asChild variant="outline" size="sm"><Link href={`/patients/${patient.id}/edit`}><Pencil className="mr-1 h-4 w-4" />환자정보수정</Link></Button>
       </header>
 
       <Tabs
@@ -87,10 +84,13 @@ export default function PatientDetailPage({ params }: PageProps) {
             기본정보
           </TabsTrigger>
           <TabsTrigger value="treatments" className="flex-1">
-            치료기록
+            치료
           </TabsTrigger>
           <TabsTrigger value="evaluations" className="flex-1">
-            평가기록
+            검사
+          </TabsTrigger>
+          <TabsTrigger value="icf" className="flex-1">
+            평가
           </TabsTrigger>
         </TabsList>
 
@@ -104,6 +104,10 @@ export default function PatientDetailPage({ params }: PageProps) {
 
         <TabsContent value="evaluations">
           <EvaluationList patientId={patient.id} />
+        </TabsContent>
+
+        <TabsContent value="icf">
+          <IcfTab patientId={patient.id} />
         </TabsContent>
       </Tabs>
     </div>

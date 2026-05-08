@@ -32,6 +32,7 @@ export default function NewEvaluationPage({ params }: PageProps) {
         ? values.mmt.map((m) => ({ ...m, grade: m.grade as MMTGrade }))
         : undefined,
       bodyMeasurement: values.toggleMeasurement ? values.measurement : undefined,
+      painMapping: values.togglePainMapping ? values.painMapping : undefined,
       custom: values.toggleCustom ? values.custom : undefined,
     }
 
@@ -44,7 +45,7 @@ export default function NewEvaluationPage({ params }: PageProps) {
     }
 
     evaluationStore.createEvaluation(input)
-    toast.success('평가기록 저장됨')
+    toast.success('검사 저장됨')
     router.replace(`/patients/${patientId}?tab=evaluations`)
   }
 
@@ -75,7 +76,7 @@ export default function NewEvaluationPage({ params }: PageProps) {
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div className="min-w-0 flex-1">
-          <h1 className="text-xl font-semibold">평가 입력</h1>
+          <h1 className="text-xl font-semibold">검사 입력</h1>
           <p className="truncate text-sm text-muted-foreground">{patient.name}</p>
         </div>
       </header>

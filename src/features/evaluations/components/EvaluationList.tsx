@@ -34,7 +34,7 @@ export function EvaluationList({ patientId }: Props) {
   }
 
   const handleDelete = (id: string) => {
-    if (!confirm('이 평가기록을 삭제할까요?')) return
+    if (!confirm('이 검사를 삭제할까요?')) return
     evaluationStore.deleteEvaluation(patientId, id)
     setEvaluations(evaluationStore.getEvaluations(patientId))
     setSelected(null)
@@ -61,7 +61,7 @@ export function EvaluationList({ patientId }: Props) {
           </div>
         ) : graphMetrics.length === 0 ? (
           <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
-            표시할 그래프가 없습니다. 평가를 입력하면 그래프 설정에서 선택할 수 있습니다.
+            표시할 그래프가 없습니다. 검사를 입력하면 그래프 설정에서 선택할 수 있습니다.
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -75,12 +75,8 @@ export function EvaluationList({ patientId }: Props) {
       {/* 평가 리스트 */}
       <section className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold">평가 기록</h3>
-          <Button asChild size="sm">
-            <Link href={`/patients/${patientId}/evaluations/new`}>
-              <Plus className="mr-1 h-4 w-4" />평가 입력
-            </Link>
-          </Button>
+          <h3 className="text-sm font-semibold">검사 기록</h3>
+          <Button asChild size="sm"><Link href={`/patients/${patientId}/evaluations/new`}><Plus className="mr-1 h-4 w-4" />검사 입력</Link></Button>
         </div>
 
         {hydrated && !hasAny && (
@@ -90,13 +86,9 @@ export function EvaluationList({ patientId }: Props) {
               strokeWidth={1.5}
             />
             <p className="text-sm text-muted-foreground">
-              아직 입력된 평가기록이 없습니다.
+              아직 입력된 검사가 없습니다.
             </p>
-            <Button asChild size="sm">
-              <Link href={`/patients/${patientId}/evaluations/new`}>
-                <Plus className="mr-1 h-4 w-4" />첫 평가 입력
-              </Link>
-            </Button>
+            <Button asChild size="sm"><Link href={`/patients/${patientId}/evaluations/new`}><Plus className="mr-1 h-4 w-4" />첫 검사 입력</Link></Button>
           </div>
         )}
 

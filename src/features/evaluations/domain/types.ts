@@ -29,13 +29,14 @@ export type CustomEval = {
   value: string                // 자유 입력
 }
 
-export type PainPattern = 'referred' | 'tingling' | 'weakness' | 'paresthesia'
+export type PainPattern = 'referred' | 'tingling' | 'weakness' | 'paresthesia' | 'radiating' | 'sharp' | 'custom'
 
 export type PainArea = {
   id: string                   // 부위 ID (예: 'shoulder_l')
   label: string                // 부위 이름 (예: '왼쪽 어깨')
   pattern: PainPattern         // 통증 양상
-  intensity: number            // 통증 강도 (1~10)
+  intensity: number            // 통증 강도 (1~10, VAS 대용)
+  customPatternLabel?: string  // 'custom'일 때의 사용자 입력 라벨
   radiationTo?: string[]       // 저림 등이 퍼지는 부위 ID들
 }
 

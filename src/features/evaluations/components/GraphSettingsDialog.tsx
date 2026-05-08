@@ -67,13 +67,13 @@ export function GraphSettingsDialog({ evaluations, selected, onChange }: Props) 
         <DialogHeader>
           <DialogTitle>그래프 표시 항목</DialogTitle>
           <DialogDescription>
-            평가기록에 데이터가 있는 항목만 그래프로 표시할 수 있습니다.
+            검사 기록에 데이터가 있는 항목만 그래프로 표시할 수 있습니다.
           </DialogDescription>
         </DialogHeader>
 
         {options.length === 0 ? (
           <p className="rounded-md border border-dashed py-8 text-center text-sm text-muted-foreground">
-            아직 평가 데이터가 없습니다.
+            아직 검사 데이터가 없습니다.
           </p>
         ) : (
           <ScrollArea className="max-h-[50vh] pr-3">

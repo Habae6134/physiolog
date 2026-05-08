@@ -74,7 +74,7 @@ export default function NewTreatmentPage({ params }: PageProps) {
     })
     // 운동 즐겨찾기 빈도 업데이트
     values.exercises.forEach((e) => exerciseFavoritesStore.recordExerciseUsage(e.name))
-    toast.success(copyMode ? '복사 저장 완료' : '치료기록 저장됨')
+    toast.success(copyMode ? '복사 저장 완료' : '치료 저장됨')
     void treatment
     router.replace(`/patients/${patientId}?tab=treatments`)
   }
@@ -106,7 +106,7 @@ export default function NewTreatmentPage({ params }: PageProps) {
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div className="min-w-0 flex-1">
-          <h1 className="text-xl font-semibold">치료기록 {copyMode ? '복사' : '작성'}</h1>
+          <h1 className="text-xl font-semibold">치료 {copyMode ? '복사' : '작성'}</h1>
           <p className="truncate text-sm text-muted-foreground">{patient.name}</p>
         </div>
         {copyMode && (
