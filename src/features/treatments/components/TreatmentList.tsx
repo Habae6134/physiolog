@@ -85,9 +85,7 @@ export function TreatmentList({ patientId }: Props) {
                               {formatDateShort(t.date)}
                             </span>
                             <span className="text-xs text-muted-foreground truncate">
-                              {t.bodyParts
-                                .map((p) => BODY_REGION_LABEL[p.region])
-                                .join(', ')}
+                              {t.bodyParts?.map((p) => BODY_REGION_LABEL[p.region]).join(', ') || '부위 정보 없음'}
                             </span>
                           </div>
                         </CommandItem>

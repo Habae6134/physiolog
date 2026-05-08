@@ -6,4 +6,5 @@ export const STORAGE_KEYS = {
   evaluationFavorites: 'physiolog_evaluations_favorites',
   graphSettings: (patientId: string) => `physiolog_graph_settings_${patientId}`,
   icf: (patientId: string) => `physiolog_icf_${patientId}`,
+  customFlags: 'physiolog_custom_flags',
 } as const

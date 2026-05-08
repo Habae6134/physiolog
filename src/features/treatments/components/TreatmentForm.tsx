@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator'
 import { BodyPartSelector } from './BodyPartSelector'
 import { MethodSelector } from './MethodSelector'
 import { ExerciseSection } from './ExerciseSection'
+import { FlagSelector } from './FlagSelector'
 import { toISODate } from '@/lib/utils/date'
 import {
   treatmentFormSchema,
@@ -31,6 +32,7 @@ const EMPTY_DEFAULTS: TreatmentFormValues = {
   exercises: [],
   homework: '',
   comment: '',
+  flags: [],
 }
 
 export function TreatmentForm({
@@ -85,6 +87,12 @@ export function TreatmentForm({
           {errors.methods && typeof errors.methods.message === 'string' && (
             <p className="text-sm text-destructive">{errors.methods.message}</p>
           )}
+        </Section>
+
+        <Separator />
+
+        <Section title="오늘의 특이사항" subtitle="델타 플래그 · AI 재평가 요약에 활용됩니다">
+          <FlagSelector />
         </Section>
 
         {showExercise && (

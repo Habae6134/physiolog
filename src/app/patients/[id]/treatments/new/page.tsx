@@ -57,6 +57,7 @@ export default function NewTreatmentPage({ params }: PageProps) {
         })),
         homework: sourceRecord.homework ?? '',
         comment: sourceRecord.comment ?? '',
+        flags: sourceRecord.flags ?? [],
       })
     }
   }, [patientId, copyMode, searchParams])
@@ -71,6 +72,7 @@ export default function NewTreatmentPage({ params }: PageProps) {
       exercises: values.exercises,
       homework: values.homework,
       comment: values.comment,
+      flags: values.flags,
     })
     // 운동 즐겨찾기 빈도 업데이트
     values.exercises.forEach((e) => exerciseFavoritesStore.recordExerciseUsage(e.name))

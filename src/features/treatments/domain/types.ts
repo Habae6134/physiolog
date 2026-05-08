@@ -37,7 +37,10 @@ export type BodyPart = {
 export type Exercise = {
   id: string
   name: string
-  intensity?: string  // 메모: 세트·횟수·중량
+  intensity?: string  // 기존 자유 입력 유지
+  sets?: number       // 델타 기록용 수치
+  reps?: number
+  weight?: number
 }
 
 export type Treatment = {
@@ -51,6 +54,7 @@ export type Treatment = {
   exercises?: Exercise[]
   homework?: string            // 숙제 (과제·운동 등)
   comment?: string             // 당일 코멘트 (환자 반응·특이사항)
+  flags?: string[]             // 델타 기록법: 오늘 특이사항 플래그
   createdAt: string
 }
 

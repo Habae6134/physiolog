@@ -34,6 +34,7 @@ export default function EditTreatmentPage({ params }: PageProps) {
       exercises: values.exercises,
       homework: values.homework,
       comment: values.comment,
+      flags: values.flags,
     })
     toast.success('치료 수정됨')
     router.replace(`/patients/${patientId}?tab=treatments`)
@@ -64,6 +65,7 @@ export default function EditTreatmentPage({ params }: PageProps) {
     exercises: (treatment.exercises ?? []) as TreatmentFormValues['exercises'],
     homework: treatment.homework ?? '',
     comment: treatment.comment,
+    flags: treatment.flags ?? [],
   }
 
   return (

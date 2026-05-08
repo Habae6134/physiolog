@@ -28,129 +28,134 @@ type Props = {
 
 export function TreatmentDetailSheet({ treatment, onOpenChange, onDelete }: Props) {
   const open = treatment !== null
+  
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="max-h-[90vh] overflow-y-auto">
         {treatment && (
-          <>
+          <div className="mx-auto max-w-2xl">
             <SheetHeader className="text-left">
               <div className="flex items-center justify-between pr-8">
                 <div>
-                  <SheetTitle>{formatDate(treatment.date)}</SheetTitle>
-                  <SheetDescription>치료 상세</SheetDescription>
+                  <SheetTitle className="text-xl">{formatDate(treatment.date)}</SheetTitle>
+                  <SheetDescription>치료 상세 기록</SheetDescription>
                 </div>
-                <Button asChild variant="outline" size="sm" className="h-8 px-2">
-                  <Link
-                    href={`/patients/${treatment.patientId}/treatments/${treatment.id}/edit`}
-                  >
-                    <Pencil className="mr-1 h-3.5 w-3.5" />수정
+                <Button asChild variant="outline" size="sm" className="h-9 px-3">
+                  <Link href={`/patients/${treatment.patientId}/treatments/${treatment.id}/edit`}>
+                    <Pencil className="mr-1.5 h-4 w-4" />수정하기
                   </Link>
                 </Button>
               </div>
             </SheetHeader>
 
-            <div className="mt-4 flex flex-col gap-4 px-4 pb-6">
-              <Section title="치료 부위">
-                <ul className="flex flex-col gap-1.5">
-                  {treatment.bodyParts.map((p, idx) => (
-                    <li key={idx} className="text-sm">
-                      <span className="font-medium">
-                        {p.side && p.side !== 'both' ? `${SIDE_LABEL[p.side]} ` : ''}
-                        {BODY_REGION_LABEL[p.region] ?? p.region}
-                      </span>
-                      {p.muscles && p.muscles.length > 0 && (
-                        <div className="mt-1 flex flex-wrap gap-1">
-                          {p.muscles.map((m) => (
-                            <Badge key={m} variant="secondary" className="text-xs">
-                              {m}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </Section>
+            <div className="mt-6 flex flex-col gap-6 pb-12">
+              {/* 치료 부위 및 방법 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Section title="치료 부위">
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {treatment.bodyParts?.map((p, idx) => (
+                      <div key={idx} className="rounded-md border bg-muted/30 px-3 py-2 text-sm">
+                        <span className="font-bold text-primary">
+                          {p.side && p.side !== 'both' ? `${SIDE_LABEL[p.side]} ` : ''}
+                          {BODY_REGION_LABEL[p.region] ?? p.region}
+                        </span>
+                        {p.muscles && p.muscles.length > 0 && (
+                          <p className="text-xs text-muted-foreground mt-1">{p.muscles.join(', ')}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </Section>
+
+                <Section title="치료 방법">
+                  <div className="flex flex-wrap gap-1.5 mt-1">
+                    {treatment.methods?.map((m) => (
+                      <Badge key={m} variant="secondary" className="px-2 py-1">
+                        {TREATMENT_METHOD_LABEL[m]}
+                      </Badge>
+                    ))}
+                    {treatment.otherTreatmentMethod && (
+                      <Badge variant="outline">{treatment.otherTreatmentMethod}</Badge>
+                    )}
+                  </div>
+                </Section>
+              </div>
 
               <Separator />
 
-              <Section title="치료 방법">
-                <div className="flex flex-wrap gap-1.5">
-                  {treatment.methods.map((m) => (
-                    <Badge key={m} variant="outline">
-                      {TREATMENT_METHOD_LABEL[m]}
-                    </Badge>
-                  ))}
-                </div>
-              </Section>
+              {/* 오늘의 특이사항 (Flag) */}
+              {treatment.flags && treatment.flags.length > 0 && (
+                <Section title="오늘의 특이사항 (Flags)">
+                  <div className="flex flex-wrap gap-2 mt-1.5">
+                    {treatment.flags.map((f) => (
+                      <span key={f} className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary border border-primary/20">
+                        {f}
+                      </span>
+                    ))}
+                  </div>
+                  <Separator className="mt-6" />
+                </Section>
+              )}
 
+              {/* 운동 치료 상세 */}
               {treatment.exerciseConcept && (
-                <>
-                  <Separator />
-                  <Section title="운동치료">
-                    <Badge variant="secondary">
-                      {EXERCISE_CONCEPT_LABEL[treatment.exerciseConcept]}
-                    </Badge>
-                    {treatment.exercises && treatment.exercises.length > 0 && (
-                      <ul className="mt-2 flex flex-col gap-2">
-                        {treatment.exercises.map((e, idx) => (
-                          <li
-                            key={e.id ?? idx}
-                            className="rounded-md border bg-background p-2 text-sm"
-                          >
-                            <div className="font-medium">
-                              {idx + 1}. {e.name}
-                            </div>
-                            {e.intensity && (
-                              <p className="mt-0.5 whitespace-pre-wrap text-xs text-muted-foreground">
-                                {e.intensity}
-                              </p>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </Section>
-                </>
+                <Section title={`운동 치료 (${EXERCISE_CONCEPT_LABEL[treatment.exerciseConcept]})`}>
+                  <div className="mt-2 space-y-3">
+                    {treatment.exercises?.map((e, idx) => (
+                      <div key={e.id ?? idx} className="rounded-xl border bg-card p-4 shadow-sm">
+                        <div className="flex items-center justify-between border-b pb-2 mb-2">
+                          <span className="font-bold text-sm text-primary">{idx + 1}. {e.name}</span>
+                          <div className="flex gap-3 text-xs font-black text-slate-900">
+                            {e.sets && <span>{e.sets} SET</span>}
+                            {e.reps && <span>{e.reps} REP</span>}
+                            {e.weight && <span>{e.weight} kg</span>}
+                          </div>
+                        </div>
+                        {e.intensity && (
+                          <p className="text-sm text-muted-foreground leading-relaxed italic">
+                            &quot;{e.intensity}&quot;
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <Separator className="mt-6" />
+                </Section>
               )}
 
-              {treatment.homework && (
-                <>
-                  <Separator />
-                  <Section title="숙제">
-                    <p className="whitespace-pre-wrap text-sm">
-                      {treatment.homework}
+              {/* 코멘트 및 숙제 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Section title="당일 코멘트">
+                  <div className="rounded-lg bg-slate-50 p-4 border min-h-[100px]">
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                      {treatment.comment || <span className="text-muted-foreground italic">작성된 코멘트가 없습니다.</span>}
                     </p>
-                  </Section>
-                </>
-              )}
+                  </div>
+                </Section>
 
-              {treatment.comment && (
-                <>
-                  <Separator />
-                  <Section title="당일 코멘트">
-                    <p className="whitespace-pre-wrap text-sm">
-                      {treatment.comment}
+                <Section title="숙제">
+                  <div className="rounded-lg bg-amber-50/30 p-4 border border-amber-100 min-h-[100px]">
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap font-medium text-amber-900">
+                      {treatment.homework || <span className="text-muted-foreground italic">부여된 숙제가 없습니다.</span>}
                     </p>
-                  </Section>
-                </>
-              )}
+                  </div>
+                </Section>
+              </div>
 
               {onDelete && (
-                <>
-                  <Separator />
+                <div className="mt-8 pt-4 border-t flex justify-center">
                   <Button
                     type="button"
                     variant="ghost"
-                    className="text-destructive hover:text-destructive"
+                    className="text-muted-foreground hover:text-destructive transition-colors"
                     onClick={() => onDelete(treatment.id)}
                   >
-                    <Trash2 className="mr-1 h-4 w-4" />치료 삭제
+                    <Trash2 className="mr-2 h-4 w-4" />치료 기록 삭제
                   </Button>
-                </>
+                </div>
               )}
             </div>
-          </>
+          </div>
         )}
       </SheetContent>
     </Sheet>
@@ -159,9 +164,9 @@ export function TreatmentDetailSheet({ treatment, onOpenChange, onDelete }: Prop
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section>
-      <h3 className="text-xs font-semibold text-muted-foreground">{title}</h3>
-      <div className="mt-1.5">{children}</div>
+    <section className="flex flex-col gap-2">
+      <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1">{title}</h3>
+      <div>{children}</div>
     </section>
   )
 }

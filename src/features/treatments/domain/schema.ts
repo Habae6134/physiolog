@@ -36,7 +36,10 @@ const exerciseConceptEnum = z.enum([
 export const exerciseSchema = z.object({
   id: z.string(),
   name: z.string().trim().min(1, '운동명을 입력하세요'),
-  intensity: z.string().trim(),
+  intensity: z.string().trim().optional(),
+  sets: z.coerce.number().min(0).optional(),
+  reps: z.coerce.number().min(0).optional(),
+  weight: z.coerce.number().min(0).optional(),
 })
 
 export const bodyPartSchema = z.object({
@@ -57,6 +60,7 @@ export const treatmentFormSchema = z
     exercises: z.array(exerciseSchema),
     homework: z.string().trim(),
     comment: z.string().trim(),
+    flags: z.array(z.string()).default([]),
   })
   .refine(
     (data) =>

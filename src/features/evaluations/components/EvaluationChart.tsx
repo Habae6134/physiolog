@@ -36,8 +36,11 @@ export function EvaluationChart({ evaluations, metric }: Props) {
 
   if (points.length === 0) {
     return (
-      <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
-        {title} — 데이터가 아직 없습니다.
+      <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground space-y-1">
+        <p className="font-medium text-slate-500">{title} — 데이터가 없습니다.</p>
+        <p className="text-xs opacity-70">
+          검사 입력 시 해당 항목을 기록하면 시간에 따른 점수 변화를 이곳에서 확인할 수 있습니다.
+        </p>
       </div>
     )
   }

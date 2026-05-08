@@ -60,8 +60,9 @@ export function EvaluationList({ patientId }: Props) {
             불러오는 중…
           </div>
         ) : graphMetrics.length === 0 ? (
-          <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
-            표시할 그래프가 없습니다. 검사를 입력하면 그래프 설정에서 선택할 수 있습니다.
+          <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground leading-relaxed">
+            표시할 그래프가 없습니다.<br />
+            VAS(통증 점수) 또는 추가로 함께 확인하고 싶은 검사결과를 설정하면 같이 점수 변화를 볼 수 있습니다.
           </div>
         ) : (
           <div className="flex flex-col gap-3">

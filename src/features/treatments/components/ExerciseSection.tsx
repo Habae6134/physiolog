@@ -47,7 +47,7 @@ export function ExerciseSection() {
     .slice(0, 6)
 
   const handleAdd = (name = '') => {
-    append({ id: newId(), name, intensity: '' })
+    append({ id: newId(), name, intensity: '', sets: 3, reps: 10, weight: 0 })
   }
 
   return (
@@ -135,17 +135,38 @@ export function ExerciseSection() {
                   <Button
                     type="button"
                     variant="ghost"
-                    size="sm"
+                    size="icon"
                     onClick={() => remove(idx)}
                     aria-label="운동 제거"
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
                   >
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <CounterField 
+                    label="세트" 
+                    value={watch(`exercises.${idx}.sets`) ?? 0} 
+                    onChange={(v) => setValue(`exercises.${idx}.sets`, v)} 
+                  />
+                  <CounterField 
+                    label="횟수" 
+                    value={watch(`exercises.${idx}.reps`) ?? 0} 
+                    onChange={(v) => setValue(`exercises.${idx}.reps`, v)} 
+                  />
+                  <CounterField 
+                    label="무게(kg)" 
+                    value={watch(`exercises.${idx}.weight`) ?? 0} 
+                    onChange={(v) => setValue(`exercises.${idx}.weight`, v)} 
+                  />
+                </div>
+
                 <Textarea
-                  rows={2}
-                  placeholder="강도/시간 메모 (예: 3세트 × 10회 × 20kg)"
+                  rows={1}
+                  placeholder="특이사항 (예: 좌측 통증 있음)"
                   {...register(`exercises.${idx}.intensity`)}
+                  className="text-xs"
                 />
               </div>
             ))}
@@ -157,5 +178,35 @@ export function ExerciseSection() {
         )}
       </div>
     </Card>
+  )
+}
+
+function CounterField({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-[10px] font-medium text-muted-foreground ml-1">{label}</span>
+      <div className="flex items-center overflow-hidden rounded-md border bg-slate-50">
+        <button
+          type="button"
+          onClick={() => onChange(Math.max(0, value - 1))}
+          className="flex h-8 w-7 items-center justify-center text-slate-500 hover:bg-slate-100 active:bg-slate-200"
+        >
+          -
+        </button>
+        <input
+          type="number"
+          value={value}
+          onChange={(e) => onChange(Math.max(0, Number(e.target.value)))}
+          className="w-full bg-transparent text-center text-xs font-semibold focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        />
+        <button
+          type="button"
+          onClick={() => onChange(value + 1)}
+          className="flex h-8 w-7 items-center justify-center text-slate-500 hover:bg-slate-100 active:bg-slate-200"
+        >
+          +
+        </button>
+      </div>
+    </div>
   )
 }

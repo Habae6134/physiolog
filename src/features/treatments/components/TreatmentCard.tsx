@@ -31,7 +31,7 @@ export function TreatmentCard({ treatment, onClick, onDelete }: Props) {
               {formatDateShort(treatment.date)}
             </span>
             <div className="flex flex-wrap gap-1">
-              {treatment.bodyParts.map((p, idx) => (
+              {treatment.bodyParts?.map((p, idx) => (
                 <Badge key={idx} variant="secondary" className="text-xs">
                   {BODY_REGION_LABEL[p.region] ?? p.region}
                 </Badge>
@@ -39,12 +39,21 @@ export function TreatmentCard({ treatment, onClick, onDelete }: Props) {
             </div>
           </div>
           <div className="flex flex-wrap gap-1">
-            {treatment.methods.map((m) => (
+            {treatment.methods?.map((m) => (
               <span key={m} className="text-[10px] text-muted-foreground">
                 #{TREATMENT_METHOD_LABEL[m]}
               </span>
             ))}
           </div>
+          {treatment.flags && treatment.flags.length > 0 && (
+            <div className="mt-1 flex flex-wrap gap-1">
+              {treatment.flags.map((f) => (
+                <span key={f} className="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-medium text-slate-600 border border-slate-200">
+                  {f}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         {onDelete && (

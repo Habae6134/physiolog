@@ -21,6 +21,29 @@ interface Props {
   patientId: string
 }
 
+const TAG_CATEGORIES = [
+  {
+    label: '통증',
+    tags: ['날카로운 통증', '둔한 통증', '방사통', '야간통', '저림', '묵직함'],
+    color: 'bg-red-50 text-red-700 border-red-100 hover:bg-red-100',
+  },
+  {
+    label: '가동범위/기능',
+    tags: ['가동범위 제한', '근력 약화', '강직', '보행 장애', '균형 저하', '유연성 부족'],
+    color: 'bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100',
+  },
+  {
+    label: '환경/직업',
+    tags: ['장시간 좌식', '무거운 물건 들기', '반복 작업', '계단 이용 많음', '스트레스', '열악한 의자'],
+    color: 'bg-purple-50 text-purple-700 border-purple-100 hover:bg-purple-100',
+  },
+  {
+    label: '심리/정서',
+    tags: ['우울감', '불안', '무력감', '회복 의지 높음', '수면 장애', '사회적 고립'],
+    color: 'bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100',
+  },
+]
+
 type Status = 'idle' | 'loading' | 'result'
 
 export function IcfAssessmentForm({ patientId }: Props) {
@@ -107,6 +130,11 @@ export function IcfAssessmentForm({ patientId }: Props) {
     setCurrentResult(null)
   }
 
+  const addTag = (tag: string) => {
+    if (input.includes(tag)) return
+    setInput(prev => prev ? `${prev}, ${tag}` : tag)
+  }
+
   return (
     <div className="flex flex-col gap-5">
       {/* 초기 입력 */}
@@ -129,10 +157,36 @@ export function IcfAssessmentForm({ patientId }: Props) {
             rows={6}
             className="resize-none text-sm"
           />
-          <Button onClick={handleInitialSubmit} disabled={!input.trim()} className="w-full gap-2">
+          <Button onClick={handleInitialSubmit} disabled={!input.trim()} className="w-full gap-2 shadow-lg shadow-primary/20">
             <Sparkles className="h-4 w-4" />
             분석 시작
           </Button>
+
+          {/* 태그 클라우드 */}
+          <div className="mt-4 space-y-4 rounded-xl border border-dashed p-4 bg-muted/20">
+            <h3 className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5" />
+              키워드 태깅 (빠른 입력)
+            </h3>
+            <div className="space-y-3">
+              {TAG_CATEGORIES.map((cat) => (
+                <div key={cat.label} className="space-y-1.5">
+                  <p className="text-[10px] font-medium text-muted-foreground/70 ml-1">{cat.label}</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {cat.tags.map((tag) => (
+                      <button
+                        key={tag}
+                        onClick={() => addTag(tag)}
+                        className={`px-2.5 py-1 rounded-full text-xs border transition-all active:scale-95 ${cat.color}`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </motion.section>
       )}
 
