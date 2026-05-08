@@ -21,35 +21,44 @@ export default function NewTreatmentPage({ params }: PageProps) {
   const { id: patientId } = use(params)
   const router = useRouter()
   const searchParams = useSearchParams()
-  const copyMode = searchParams.get('copy') === '1'
+  const copyFromId = searchParams.get('copyFrom')
+  const copyMode = searchParams.get('copy') === '1' || !!copyFromId
 
   const [patient, setPatient] = useState<Patient | null | undefined>(undefined)
   const [defaults, setDefaults] = useState<Partial<TreatmentFormValues>>({})
 
   useEffect(() => {
     setPatient(patientStore.getPatient(patientId) ?? null)
-    if (copyMode) {
-      const latest = treatmentStore.getLatestTreatment(patientId)
-      if (latest) {
-        setDefaults({
-          date: toISODate(),
-          bodyParts: latest.bodyParts.map((p) => ({
-            region: p.region,
-            side: p.side ?? 'both',
-            muscles: p.muscles ?? [],
-          })),
-          methods: latest.methods,
-          exerciseConcept: latest.exerciseConcept,
-          exercises: (latest.exercises ?? []).map((e) => ({
-            id: e.id,
-            name: e.name,
-            intensity: e.intensity ?? '',
-          })),
-          comment: latest.comment ?? '',
-        })
-      }
+    
+    const copyFromId = searchParams.get('copyFrom')
+    let sourceRecord: any = null
+
+    if (copyFromId) {
+      sourceRecord = treatmentStore.getTreatment(patientId, copyFromId)
+    } else if (copyMode) {
+      sourceRecord = treatmentStore.getLatestTreatment(patientId)
     }
-  }, [patientId, copyMode])
+
+    if (sourceRecord) {
+      setDefaults({
+        date: toISODate(),
+        bodyParts: sourceRecord.bodyParts.map((p: any) => ({
+          region: p.region,
+          side: p.side ?? 'both',
+          muscles: p.muscles ?? [],
+        })),
+        methods: sourceRecord.methods,
+        otherTreatmentMethod: sourceRecord.otherTreatmentMethod,
+        exerciseConcept: sourceRecord.exerciseConcept,
+        exercises: (sourceRecord.exercises ?? []).map((e: any) => ({
+          id: e.id,
+          name: e.name,
+          intensity: e.intensity ?? '',
+        })),
+        comment: sourceRecord.comment ?? '',
+      })
+    }
+  }, [patientId, copyMode, searchParams])
 
   function handleSubmit(values: TreatmentFormValues) {
     const treatment = treatmentStore.createTreatment({

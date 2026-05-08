@@ -2,11 +2,27 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Copy, FileText, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
 import { TreatmentCard } from './TreatmentCard'
 import { TreatmentDetailSheet } from './TreatmentDetailSheet'
 import { treatmentStore } from '@/lib/storage'
+import { formatDateShort } from '@/lib/utils/date'
+import { BODY_REGION_LABEL } from '@/data/body-parts'
 import type { Treatment } from '@/features/treatments/domain/types'
 
 type Props = { patientId: string }
@@ -15,6 +31,9 @@ export function TreatmentList({ patientId }: Props) {
   const [treatments, setTreatments] = useState<Treatment[]>([])
   const [hydrated, setHydrated] = useState(false)
   const [selected, setSelected] = useState<Treatment | null>(null)
+  const [openCopyPopover, setOpenCopyPopover] = useState(false)
+
+  const router = useRouter() // import useRouter from next/navigation 필요
 
   useEffect(() => {
     setTreatments(treatmentStore.getTreatments(patientId))
@@ -38,13 +57,46 @@ export function TreatmentList({ patientId }: Props) {
         </p>
         <div className="flex gap-2">
           {hasAny && (
-            <Button asChild variant="outline" size="sm">
-              <Link
-                href={`/patients/${patientId}/treatments/new?copy=1`}
-              >
-                <Copy className="mr-1 h-4 w-4" />이전 기록 복사
-              </Link>
-            </Button>
+            <Popover open={openCopyPopover} onOpenChange={setOpenCopyPopover}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Copy className="mr-1 h-4 w-4" />이전 기록 복사
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[280px] p-0" align="end">
+                <Command>
+                  <CommandInput placeholder="날짜 검색..." />
+                  <CommandList>
+                    <CommandEmpty>기록이 없습니다.</CommandEmpty>
+                    <CommandGroup heading="복사할 기록 선택">
+                      {treatments.map((t) => (
+                        <CommandItem
+                          key={t.id}
+                          value={t.date}
+                          onSelect={() => {
+                            router.push(
+                              `/patients/${patientId}/treatments/new?copyFrom=${t.id}`,
+                            )
+                            setOpenCopyPopover(false)
+                          }}
+                        >
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-sm font-medium">
+                              {formatDateShort(t.date)}
+                            </span>
+                            <span className="text-xs text-muted-foreground truncate">
+                              {t.bodyParts
+                                .map((p) => BODY_REGION_LABEL[p.region])
+                                .join(', ')}
+                            </span>
+                          </div>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           )}
           <Button asChild size="sm">
             <Link href={`/patients/${patientId}/treatments/new`}>
