@@ -1,6 +1,6 @@
 'use client'
 
-import { FormProvider, useForm } from 'react-hook-form'
+import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -42,10 +42,14 @@ export function TreatmentForm({
   onCancel,
 }: Props) {
   const form = useForm<TreatmentFormValues>({
-    resolver: zodResolver(treatmentFormSchema),
-    defaultValues: { ...EMPTY_DEFAULTS, ...defaultValues },
+    resolver: zodResolver(treatmentFormSchema) as any,
+    defaultValues: { ...EMPTY_DEFAULTS, ...defaultValues } as any,
     mode: 'onSubmit',
   })
+
+  const handleFormSubmit: SubmitHandler<TreatmentFormValues> = async (values) => {
+    await onSubmit(values)
+  }
 
   const methods = form.watch('methods')
   const showExercise = methods?.includes('exercise')
@@ -55,7 +59,7 @@ export function TreatmentForm({
   return (
     <FormProvider {...form}>
       <form
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={form.handleSubmit(handleFormSubmit)}
         className="flex flex-col gap-6 pb-24"
       >
         <Section title="치료 날짜">

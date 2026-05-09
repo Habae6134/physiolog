@@ -31,7 +31,7 @@ export default function StatisticsPage() {
 
     allAssessments.forEach(a => {
       Object.entries(a.finalDomains).forEach(([domain, items]) => {
-        items.forEach(item => {
+        items.forEach((item: string) => {
           const d = domain as IcfDomainKey
           keywordCounts[d][item] = (keywordCounts[d][item] || 0) + 1
         })
