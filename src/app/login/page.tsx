@@ -3,39 +3,63 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { authStore } from '@/lib/storage'
+import { login, getSession } from '@/lib/supabase/actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Lock, ShieldCheck, Activity, User } from 'lucide-react'
+import { Lock, ShieldCheck, Activity, Mail } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [rememberId, setRememberId] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
+  const ID_STORAGE_KEY = 'physiolog_remembered_email'
+
   useEffect(() => {
-    if (authStore.getSession().isLoggedIn) {
-      router.replace('/')
+    // 세션 체크
+    getSession().then(session => {
+      if (session) {
+        router.replace('/')
+      }
+    })
+
+    // 저장된 아이디 불러오기
+    const savedEmail = localStorage.getItem(ID_STORAGE_KEY)
+    if (savedEmail) {
+      setEmail(savedEmail)
+      setRememberId(true)
     }
   }, [router])
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
-    setTimeout(() => {
-      const success = authStore.login(username, password)
-      if (success) {
-        toast.success(`${username}님, 환영합니다.`)
-        router.replace('/')
-      } else {
-        toast.error('아이디 또는 비밀번호가 올바르지 않습니다.')
-        setIsLoading(false)
-      }
-    }, 800)
+    // 아이디 저장 로직
+    if (rememberId) {
+      localStorage.setItem(ID_STORAGE_KEY, email)
+    } else {
+      localStorage.removeItem(ID_STORAGE_KEY)
+    }
+
+    const formData = new FormData()
+    formData.append('email', email)
+    formData.append('password', password)
+
+    const result = await login(formData)
+    
+    if (result?.error) {
+      toast.error(result.error)
+      setIsLoading(false)
+    } else {
+      toast.success('환영합니다!')
+      router.replace('/')
+      router.refresh()
+    }
   }
 
   return (
@@ -51,22 +75,23 @@ export default function LoginPage() {
               <ShieldCheck className="w-4 h-4" />
               질병을 넘어, 삶의 기능을 분석합니다
             </span>
-            <span className="text-[11px] opacity-70">WHO ICF 기반의 전문적이고 효율적인 평가 솔루션</span>
+            <span className="text-[11px] opacity-70">환자의 삶을 데이터로 연결하는 ICF 기반 어시스턴트</span>
           </p>
         </div>
 
         <div className="rounded-3xl border bg-card/50 backdrop-blur-xl p-8 shadow-2xl shadow-indigo-500/5 animate-in slide-in-from-bottom-8 duration-700">
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="username">아이디</Label>
+              <Label htmlFor="email">이메일</Label>
               <div className="relative group">
-                <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <Input
-                  id="username"
-                  placeholder="아이디를 입력하세요"
+                  id="email"
+                  type="email"
+                  placeholder="이메일을 입력하세요"
                   className="pl-10 h-11 bg-background/50 border-muted focus:ring-primary/20"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
@@ -85,6 +110,22 @@ export default function LoginPage() {
                   required
                 />
               </div>
+            </div>
+
+            <div className="flex items-center space-x-2 px-1">
+              <input
+                id="remember"
+                type="checkbox"
+                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary/20 cursor-pointer"
+                checked={rememberId}
+                onChange={(e) => setRememberId(e.target.checked)}
+              />
+              <label 
+                htmlFor="remember" 
+                className="text-xs font-medium text-muted-foreground cursor-pointer select-none"
+              >
+                아이디 저장
+              </label>
             </div>
             
             <Button 

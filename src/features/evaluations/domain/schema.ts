@@ -65,7 +65,7 @@ export const evaluationFormSchema = z
       path: ['toggleVas'],
     },
   )
-  .refine((d) => !d.toggleVas || (d.vas !== undefined && d.vas >= 0), {
+  .refine((d) => !(d.toggleVas || d.togglePainMapping) || (d.vas !== undefined && d.vas !== null), {
     message: 'VAS 점수를 입력하세요',
     path: ['vas'],
   })

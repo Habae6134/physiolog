@@ -7,8 +7,11 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ApiKeyDialog } from '@/components/ApiKeyDialog'
 import { PatientCard } from './PatientCard'
-import { patientStore, treatmentStore, authStore, evaluationStore } from '@/lib/storage'
-import { LogOut, Trash2, CheckCircle, CheckSquare, Square, X, BarChart2, ArrowUpDown } from 'lucide-react'
+import { treatmentStore, evaluationStore } from '@/lib/storage'
+import { getProfile, logout } from '@/lib/supabase/actions'
+import { getPatients, deletePatient, updatePatient } from '@/lib/supabase/patients'
+import { getLatestTreatment } from '@/lib/supabase/treatments'
+import { LogOut, Trash2, CheckCircle, CheckSquare, Square, X, BarChart2, ArrowUpDown, UserCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -26,17 +29,44 @@ export function PatientList() {
   const [patients, setPatients] = useState<Patient[]>([])
   const [query, setQuery] = useState('')
   const [hydrated, setHydrated] = useState(false)
-  const [username, setUsername] = useState<string | null>(null)
+  const [userProfile, setUserProfile] = useState<{ name: string; role: string; workplace: string } | null>(null)
   const [activeTab, setActiveTab] = useState('active')
   const [isSelectionMode, setIsSelectionMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [sortBy, setSortBy] = useState<'name' | 'status' | 'recent' | 'created'>('name')
+  const [latestDates, setLatestDates] = useState<Record<string, string>>({})
 
   const router = useRouter()
 
   useEffect(() => {
-    setPatients(patientStore.getAllPatients())
-    setUsername(authStore.getSession().username)
+    // 서버에서 환자 목록 및 최근 치료 날짜 가져오기
+    const fetchPatients = async () => {
+      const data = await getPatients()
+      setPatients(data)
+
+      const datesMap: Record<string, string> = {}
+      for (const p of data) {
+        const latest = await getLatestTreatment(p.id)
+        if (latest) {
+          datesMap[p.id] = latest.date
+        }
+      }
+      setLatestDates(datesMap)
+    }
+    fetchPatients()
+    
+    // 서버에서 프로필 정보 가져오기
+    const loadUser = async () => {
+      const profile = await getProfile()
+      if (profile) {
+        setUserProfile({
+          name: profile.name || profile.email?.split('@')[0] || '사용자',
+          role: profile.role || '',
+          workplace: profile.workplace || ''
+        })
+      }
+    }
+    loadUser()
     
     // 저장된 정렬 기준 불러오기
     const savedSort = localStorage.getItem('physiolog_patient_sort') as any
@@ -52,15 +82,18 @@ export function PatientList() {
     localStorage.setItem('physiolog_patient_sort', val)
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (confirm('로그아웃 하시겠습니까?')) {
-      authStore.logout()
-      toast.info('로그아웃 되었습니다.')
-      router.replace('/login')
+      try {
+        await logout()
+        toast.info('로그아웃 되었습니다.')
+        router.replace('/login')
+      } catch (error) {
+        console.error('로그아웃 오류:', error)
+        // 리다이렉트 에러 등 무시
+      }
     }
   }
-
-
 
   const handleSelect = (id: string, selected: boolean) => {
     setSelectedIds(prev => 
@@ -76,43 +109,37 @@ export function PatientList() {
     }
   }
 
-  const handleBatchDelete = () => {
+  const handleBatchDelete = async () => {
     if (!confirm(`${selectedIds.length}명의 환자 정보를 완전히 삭제할까요?`)) return
     
-    selectedIds.forEach(id => {
-      patientStore.deletePatient(id)
-    })
+    setIsSelectionMode(false) // UI 잠금
+    
+    for (const id of selectedIds) {
+      await deletePatient(id)
+    }
     
     toast.success(`${selectedIds.length}명 삭제됨`)
-    setPatients(patientStore.getAllPatients())
+    setPatients(await getPatients())
     setSelectedIds([])
-    setIsSelectionMode(false)
   }
 
-  const handleBatchMoveToClosed = () => {
+  const handleBatchMoveToClosed = async () => {
     if (!confirm(`${selectedIds.length}명의 환자를 '종결' 상태로 변경할까요?`)) return
     
-    selectedIds.forEach(id => {
-      const p = patients.find(p => p.id === id)
-      if (p) {
-        patientStore.updatePatient(id, { ...p, status: 'discharged' })
-      }
-    })
+    setIsSelectionMode(false)
+    
+    for (const id of selectedIds) {
+      await updatePatient(id, { status: 'discharged' })
+    }
     
     toast.success(`${selectedIds.length}명 종결 처리됨`)
-    setPatients(patientStore.getAllPatients())
+    setPatients(await getPatients())
     setSelectedIds([])
-    setIsSelectionMode(false)
   }
 
   const lastTreatmentByPatient = useMemo(() => {
-    const map: Record<string, string | undefined> = {}
-    if (!hydrated) return map
-    for (const p of patients) {
-      map[p.id] = treatmentStore.getLatestTreatment(p.id)?.date
-    }
-    return map
-  }, [patients, hydrated])
+    return latestDates
+  }, [latestDates])
 
   const filtered = useMemo(() => {
     let result = patients
@@ -160,17 +187,35 @@ export function PatientList() {
   }, [patients])
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 p-4 pb-24">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">환자</h1>
-          {username && (
-            <p className="text-xs text-muted-foreground mt-0.5">
-              <span className="font-medium text-primary">{username}</span> 전문가님 안녕하세요
-            </p>
+    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 p-4 pb-24 relative overflow-hidden">
+      <header className="flex items-start justify-between relative z-10">
+        <div className="flex flex-col gap-4">
+          {userProfile && (
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <p className="text-base font-semibold text-foreground">
+                  {userProfile.name} <span className="text-xs font-normal text-muted-foreground">{userProfile.role}</span>
+                </p>
+                {userProfile.workplace && (
+                  <span className="text-[10px] font-bold text-primary bg-primary/5 px-1.5 py-0.5 rounded border border-primary/10">
+                    {userProfile.workplace}
+                  </span>
+                )}
+              </div>
+              <p className="text-[10px] text-muted-foreground/60 tracking-wider uppercase font-medium">
+                Expert Healthcare Provider
+              </p>
+            </div>
           )}
+          
+          <h1 className="text-2xl font-bold tracking-tight">환자 목록</h1>
         </div>
         <div className="flex items-center gap-1.5">
+          <Button variant="ghost" size="icon" asChild title="프로필 설정" className="h-9 w-9">
+            <Link href="/profile">
+              <UserCircle className="h-4 w-4 text-muted-foreground" />
+            </Link>
+          </Button>
           <Button variant="ghost" size="icon" asChild title="통계 분석" className="h-9 w-9">
             <Link href="/statistics">
               <BarChart2 className="h-4 w-4 text-muted-foreground" />
@@ -195,19 +240,19 @@ export function PatientList() {
         </div>
       </header>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 relative z-10">
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/80" />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="이름으로 검색"
-              className="pl-9"
+              className="pl-9 bg-muted/40 border-muted-foreground/20 focus:bg-background transition-all shadow-sm focus:shadow-md"
             />
           </div>
           <Select value={sortBy} onValueChange={handleSortChange}>
-            <SelectTrigger className="h-10 w-[120px] text-xs">
+            <SelectTrigger className="h-10 w-[120px] text-xs bg-muted/40 border-muted-foreground/20 shadow-sm">
               <div className="flex items-center gap-1.5">
                 <SelectValue />
               </div>
@@ -222,28 +267,30 @@ export function PatientList() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-3 bg-muted/30 p-1">
             <TabsTrigger value="active" className="text-xs sm:text-sm">
-              치료 중 <span className="ml-1 opacity-60">{counts.active}</span>
+              치료 중 <span className="ml-1 opacity-60 font-mono">{counts.active}</span>
             </TabsTrigger>
             <TabsTrigger value="discharged" className="text-xs sm:text-sm">
-              종결 <span className="ml-1 opacity-60">{counts.closed}</span>
+              종결 <span className="ml-1 opacity-60 font-mono">{counts.closed}</span>
             </TabsTrigger>
             <TabsTrigger value="all" className="text-xs sm:text-sm">
-              전체 <span className="ml-1 opacity-60">{counts.all}</span>
+              전체 <span className="ml-1 opacity-60 font-mono">{counts.all}</span>
             </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
 
       {!hydrated ? (
-        <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-          불러오는 중…
+        <div className="flex flex-1 items-center justify-center py-20 relative z-10">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         </div>
       ) : filtered.length === 0 ? (
-        <EmptyState hasPatients={patients.length > 0} />
+        <div className="relative z-10 flex-1">
+          <EmptyState hasPatients={patients.length > 0} />
+        </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 relative z-10 flex-1">
           {isSelectionMode && filtered.length > 0 && (
             <Button 
               variant="ghost" 
@@ -267,6 +314,16 @@ export function PatientList() {
           ))}
         </div>
       )}
+
+      {/* 하단 철학적 문구 푸터 */}
+      <footer className="mt-auto py-6 text-center opacity-40 select-none pointer-events-none">
+        <p className="text-[10px] font-medium tracking-widest text-muted-foreground uppercase mb-1">
+          Professional Clinical Standard
+        </p>
+        <p className="text-xs italic leading-relaxed break-keep px-8">
+          "정확한 평가는 치료의 가장 정직한 지도(Map)가 됩니다."
+        </p>
+      </footer>
 
       {/* 일괄 작업 바 */}
       {isSelectionMode && selectedIds.length > 0 && (

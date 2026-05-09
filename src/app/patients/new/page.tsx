@@ -5,16 +5,20 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { PatientForm } from '@/features/patients/components/PatientForm'
-import { patientStore } from '@/lib/storage'
+import { createPatient } from '@/lib/supabase/patients'
 import type { PatientFormValues } from '@/features/patients/domain/schema'
 
 export default function NewPatientPage() {
   const router = useRouter()
 
-  function handleSubmit(values: PatientFormValues) {
-    const patient = patientStore.createPatient(values)
-    toast.success('환자 등록 완료', { description: patient.name })
-    router.push(`/patients/${patient.id}`)
+  async function handleSubmit(values: PatientFormValues) {
+    const result = await createPatient(values)
+    if (result.success && result.data) {
+      toast.success('환자 등록 완료', { description: result.data.name })
+      router.push(`/patients/${result.data.id}`)
+    } else {
+      toast.error('환자 등록 실패', { description: result.error })
+    }
   }
 
   return (

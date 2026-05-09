@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { EvaluationForm } from '@/features/evaluations/components/EvaluationForm'
-import { evaluationStore, patientStore } from '@/lib/storage'
+import { getPatient } from '@/lib/supabase/patients'
+import { getEvaluation, updateEvaluation } from '@/lib/supabase/evaluations'
 import type { EvaluationFormValues } from '@/features/evaluations/domain/schema'
 import type { Patient } from '@/features/patients/domain/types'
 import type { Evaluation, MMTGrade } from '@/features/evaluations/domain/types'
@@ -20,12 +21,15 @@ export default function EditEvaluationPage({ params }: PageProps) {
   const [evaluation, setEvaluation] = useState<Evaluation | null | undefined>(undefined)
 
   useEffect(() => {
-    setPatient(patientStore.getPatient(patientId) ?? null)
-    setEvaluation(evaluationStore.getEvaluation(patientId, evaluationId) ?? null)
+    async function load() {
+      setPatient(await getPatient(patientId))
+      setEvaluation(await getEvaluation(evaluationId))
+    }
+    load()
   }, [patientId, evaluationId])
 
-  function handleSubmit(values: EvaluationFormValues) {
-    evaluationStore.updateEvaluation(patientId, evaluationId, {
+  async function handleSubmit(values: EvaluationFormValues) {
+    const result = await updateEvaluation(evaluationId, patientId, {
       date: values.date,
       vas: values.toggleVas ? values.vas : undefined,
       rom: values.toggleRom ? values.rom : undefined,
@@ -36,8 +40,13 @@ export default function EditEvaluationPage({ params }: PageProps) {
       painMapping: values.togglePainMapping ? values.painMapping : undefined,
       custom: values.toggleCustom ? values.custom : undefined,
     })
-    toast.success('검사 수정됨')
-    router.replace(`/patients/${patientId}?tab=evaluations`)
+    
+    if (result.success) {
+      toast.success('검사 수정됨')
+      router.replace(`/patients/${patientId}?tab=evaluations`)
+    } else {
+      toast.error('검사 기록 수정 실패', { description: result.error })
+    }
   }
 
   if (patient === undefined || evaluation === undefined) {
@@ -58,17 +67,17 @@ export default function EditEvaluationPage({ params }: PageProps) {
 
   const defaultValues: Partial<EvaluationFormValues> = {
     date: evaluation.date,
-    toggleVas: evaluation.vas !== undefined,
-    vas: evaluation.vas,
-    toggleRom: evaluation.rom !== undefined && evaluation.rom.length > 0,
+    toggleVas: evaluation.vas != null,
+    vas: evaluation.vas ?? undefined,
+    toggleRom: evaluation.rom != null && evaluation.rom.length > 0,
     rom: (evaluation.rom ?? []) as EvaluationFormValues['rom'],
-    toggleMmt: evaluation.mmt !== undefined && evaluation.mmt.length > 0,
+    toggleMmt: evaluation.mmt != null && evaluation.mmt.length > 0,
     mmt: (evaluation.mmt ?? []) as EvaluationFormValues['mmt'],
-    toggleMeasurement: evaluation.bodyMeasurement !== undefined && evaluation.bodyMeasurement.length > 0,
+    toggleMeasurement: evaluation.bodyMeasurement != null && evaluation.bodyMeasurement.length > 0,
     measurement: evaluation.bodyMeasurement ?? [],
-    toggleCustom: evaluation.custom !== undefined && evaluation.custom.length > 0,
+    toggleCustom: evaluation.custom != null && evaluation.custom.length > 0,
     custom: evaluation.custom ?? [],
-    togglePainMapping: evaluation.painMapping !== undefined && evaluation.painMapping.length > 0,
+    togglePainMapping: evaluation.painMapping != null && evaluation.painMapping.length > 0,
     painMapping: evaluation.painMapping ?? [],
   }
 

@@ -3,21 +3,21 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { authStore } from '@/lib/storage'
+import { signup } from '@/lib/supabase/actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Lock, UserPlus, User, ArrowLeft, CheckCircle2 } from 'lucide-react'
+import { Lock, UserPlus, Mail, ArrowLeft, CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function SignupPage() {
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (password !== confirmPassword) {
@@ -25,23 +25,26 @@ export default function SignupPage() {
       return
     }
 
-    if (password.length < 4) {
-      toast.error('비밀번호는 최소 4자 이상이어야 합니다.')
+    if (password.length < 6) {
+      toast.error('비밀번호는 최소 6자 이상이어야 합니다.')
       return
     }
 
     setIsLoading(true)
 
-    setTimeout(() => {
-      const success = authStore.signup(username, password)
-      if (success) {
-        toast.success('회원가입이 완료되었습니다! 로그인해주세요.')
-        router.push('/login')
-      } else {
-        toast.error('이미 존재하는 아이디입니다.')
-        setIsLoading(false)
-      }
-    }, 1000)
+    const formData = new FormData()
+    formData.append('email', email)
+    formData.append('password', password)
+
+    const result = await signup(formData)
+    
+    if (result?.error) {
+      toast.error(result.error)
+      setIsLoading(false)
+    } else {
+      toast.success('회원가입이 완료되었습니다! 이메일을 확인하거나 로그인해주세요.')
+      router.push('/login')
+    }
   }
 
   return (
@@ -60,15 +63,16 @@ export default function SignupPage() {
         <div className="rounded-3xl border bg-card/50 backdrop-blur-xl p-8 shadow-2xl shadow-blue-500/5 animate-in slide-in-from-bottom-8 duration-700">
           <form onSubmit={handleSignup} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">아이디</Label>
+              <Label htmlFor="email">이메일</Label>
               <div className="relative group">
-                <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <Input
-                  id="username"
-                  placeholder="사용할 아이디"
+                  id="email"
+                  type="email"
+                  placeholder="사용할 이메일"
                   className="pl-10 h-11 bg-background/50 border-muted focus:ring-primary/20"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>

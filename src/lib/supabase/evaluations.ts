@@ -1,0 +1,124 @@
+'use server'
+
+import { createClient } from './server'
+import { revalidatePath } from 'next/cache'
+import type { Evaluation, EvaluationInput } from '@/features/evaluations/domain/types'
+
+// 특정 환자의 검사 기록 목록 조회
+export async function getEvaluations(patientId: string): Promise<Evaluation[]> {
+  const supabase = await createClient()
+  
+  const { data, error } = await supabase
+    .from('evaluations')
+    .select('*')
+    .eq('patient_id', patientId)
+    .order('date', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching evaluations:', error)
+    return []
+  }
+
+  return data.map(dbToEvaluation)
+}
+
+// 검사 기록 등록
+export async function createEvaluation(input: EvaluationInput): Promise<{ success: boolean; data?: Evaluation; error?: string }> {
+  const supabase = await createClient()
+  
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: '로그인이 필요합니다.' }
+
+  const { data, error } = await supabase
+    .from('evaluations')
+    .insert({
+      user_id: user.id,
+      patient_id: input.patientId,
+      date: input.date,
+      vas: input.vas,
+      rom: input.rom,
+      mmt: input.mmt,
+      body_measurement: input.bodyMeasurement,
+      pain_mapping: input.painMapping,
+      custom: input.custom,
+    })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error creating evaluation:', error)
+    return { success: false, error: error.message }
+  }
+
+  revalidatePath('/')
+  revalidatePath(`/patients/${input.patientId}`)
+  
+  return { success: true, data: dbToEvaluation(data) }
+}
+
+// 검사 기록 수정
+export async function updateEvaluation(id: string, patientId: string, updates: Partial<EvaluationInput>): Promise<{ success: boolean; data?: Evaluation; error?: string }> {
+  const supabase = await createClient()
+
+  const dbUpdates: any = {}
+  if (updates.date !== undefined) dbUpdates.date = updates.date
+  if (updates.vas !== undefined) dbUpdates.vas = updates.vas
+  if (updates.rom !== undefined) dbUpdates.rom = updates.rom
+  if (updates.mmt !== undefined) dbUpdates.mmt = updates.mmt
+  if (updates.bodyMeasurement !== undefined) dbUpdates.body_measurement = updates.bodyMeasurement
+  if (updates.painMapping !== undefined) dbUpdates.pain_mapping = updates.painMapping
+  if (updates.custom !== undefined) dbUpdates.custom = updates.custom
+
+  const { data, error } = await supabase
+    .from('evaluations')
+    .update(dbUpdates)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error updating evaluation:', error)
+    return { success: false, error: error.message }
+  }
+
+  revalidatePath('/')
+  revalidatePath(`/patients/${patientId}`)
+  
+  return { success: true, data: dbToEvaluation(data) }
+}
+
+// 검사 기록 삭제
+export async function deleteEvaluation(id: string, patientId: string): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('evaluations')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    console.error('Error deleting evaluation:', error)
+    return { success: false, error: error.message }
+  }
+
+  revalidatePath('/')
+  revalidatePath(`/patients/${patientId}`)
+  
+  return { success: true }
+}
+
+// DB snake_case -> 앱 camelCase 변환
+function dbToEvaluation(dbRecord: any): Evaluation {
+  return {
+    id: dbRecord.id,
+    patientId: dbRecord.patient_id,
+    date: dbRecord.date,
+    vas: dbRecord.vas,
+    rom: dbRecord.rom,
+    mmt: dbRecord.mmt,
+    bodyMeasurement: dbRecord.body_measurement,
+    painMapping: dbRecord.pain_mapping,
+    custom: dbRecord.custom,
+    createdAt: dbRecord.created_at,
+  }
+}

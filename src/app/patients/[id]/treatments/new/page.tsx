@@ -8,9 +8,9 @@ import { toast } from 'sonner'
 import { TreatmentForm } from '@/features/treatments/components/TreatmentForm'
 import {
   exerciseFavoritesStore,
-  patientStore,
-  treatmentStore,
 } from '@/lib/storage'
+import { getPatient } from '@/lib/supabase/patients'
+import { getTreatment, getLatestTreatment, createTreatment } from '@/lib/supabase/treatments'
 import type { TreatmentFormValues } from '@/features/treatments/domain/schema'
 import { toISODate } from '@/lib/utils/date'
 import type { Patient } from '@/features/patients/domain/types'
@@ -28,42 +28,45 @@ export default function NewTreatmentPage({ params }: PageProps) {
   const [defaults, setDefaults] = useState<Partial<TreatmentFormValues>>({})
 
   useEffect(() => {
-    setPatient(patientStore.getPatient(patientId) ?? null)
-    
-    const copyFromId = searchParams.get('copyFrom')
-    let sourceRecord: any = null
+    async function loadData() {
+      setPatient(await getPatient(patientId))
+      
+      const copyFromId = searchParams.get('copyFrom')
+      let sourceRecord: any = null
 
-    if (copyFromId) {
-      sourceRecord = treatmentStore.getTreatment(patientId, copyFromId)
-    } else if (copyMode) {
-      sourceRecord = treatmentStore.getLatestTreatment(patientId)
-    }
+      if (copyFromId) {
+        sourceRecord = await getTreatment(copyFromId)
+      } else if (copyMode) {
+        sourceRecord = await getLatestTreatment(patientId)
+      }
 
-    if (sourceRecord) {
-      setDefaults({
-        date: toISODate(),
-        bodyParts: sourceRecord.bodyParts.map((p: any) => ({
-          region: p.region,
-          side: p.side ?? 'both',
-          muscles: p.muscles ?? [],
-        })),
-        methods: sourceRecord.methods,
-        otherTreatmentMethod: sourceRecord.otherTreatmentMethod,
-        exerciseConcept: sourceRecord.exerciseConcept,
-        exercises: (sourceRecord.exercises ?? []).map((e: any) => ({
-          id: e.id,
-          name: e.name,
-          intensity: e.intensity ?? '',
-        })),
-        homework: sourceRecord.homework ?? '',
-        comment: sourceRecord.comment ?? '',
-        flags: sourceRecord.flags ?? [],
-      })
+      if (sourceRecord) {
+        setDefaults({
+          date: toISODate(),
+          bodyParts: sourceRecord.bodyParts.map((p: any) => ({
+            region: p.region,
+            side: p.side ?? 'both',
+            muscles: p.muscles ?? [],
+          })),
+          methods: sourceRecord.methods,
+          otherTreatmentMethod: sourceRecord.otherTreatmentMethod,
+          exerciseConcept: sourceRecord.exerciseConcept,
+          exercises: (sourceRecord.exercises ?? []).map((e: any) => ({
+            id: e.id,
+            name: e.name,
+            intensity: e.intensity ?? '',
+          })),
+          homework: sourceRecord.homework ?? '',
+          comment: sourceRecord.comment ?? '',
+          flags: sourceRecord.flags ?? [],
+        })
+      }
     }
+    loadData()
   }, [patientId, copyMode, searchParams])
 
-  function handleSubmit(values: TreatmentFormValues) {
-    const treatment = treatmentStore.createTreatment({
+  async function handleSubmit(values: TreatmentFormValues) {
+    const result = await createTreatment({
       patientId,
       date: values.date,
       bodyParts: values.bodyParts,
@@ -74,11 +77,15 @@ export default function NewTreatmentPage({ params }: PageProps) {
       comment: values.comment,
       flags: values.flags,
     })
-    // 운동 즐겨찾기 빈도 업데이트
-    values.exercises.forEach((e) => exerciseFavoritesStore.recordExerciseUsage(e.name))
-    toast.success(copyMode ? '복사 저장 완료' : '치료 저장됨')
-    void treatment
-    router.replace(`/patients/${patientId}?tab=treatments`)
+    
+    if (result.success) {
+      // 운동 즐겨찾기 빈도 업데이트
+      values.exercises.forEach((e) => exerciseFavoritesStore.recordExerciseUsage(e.name))
+      toast.success(copyMode ? '복사 저장 완료' : '치료 저장됨')
+      router.replace(`/patients/${patientId}?tab=treatments`)
+    } else {
+      toast.error('치료 기록 저장 실패', { description: result.error })
+    }
   }
 
   if (patient === undefined) {

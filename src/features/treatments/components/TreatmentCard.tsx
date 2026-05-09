@@ -2,7 +2,7 @@
 
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Trash2 } from 'lucide-react'
+import { CheckSquare, Square, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { BODY_REGION_LABEL, SIDE_LABEL } from '@/data/body-parts'
 import {
@@ -11,21 +11,54 @@ import {
 } from '@/data/treatment-options'
 import { formatDateShort } from '@/lib/utils/date'
 import type { Treatment } from '@/features/treatments/domain/types'
+import { cn } from '@/lib/utils'
 
 type Props = {
   treatment: Treatment
   onClick?: () => void
   onDelete?: (id: string) => void
+  isSelectionMode?: boolean
+  isSelected?: boolean
+  onSelect?: (id: string) => void
 }
 
-export function TreatmentCard({ treatment, onClick, onDelete }: Props) {
+export function TreatmentCard({ 
+  treatment, 
+  onClick, 
+  onDelete,
+  isSelectionMode,
+  isSelected,
+  onSelect
+}: Props) {
+  const handleClick = () => {
+    if (isSelectionMode && onSelect) {
+      onSelect(treatment.id)
+    } else if (onClick) {
+      onClick()
+    }
+  }
+
   return (
     <Card
-      onClick={onClick}
-      className="group cursor-pointer px-4 py-3 transition hover:border-primary"
+      onClick={handleClick}
+      className={cn(
+        "group cursor-pointer px-4 py-3 transition hover:border-primary",
+        isSelected && "border-primary bg-primary/5"
+      )}
     >
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex flex-col gap-1.5">
+      <div className="flex items-center gap-3">
+        {isSelectionMode && (
+          <div className="shrink-0">
+            {isSelected ? (
+              <CheckSquare className="h-5 w-5 text-primary" />
+            ) : (
+              <Square className="h-5 w-5 text-muted-foreground" />
+            )}
+          </div>
+        )}
+        
+        <div className="flex flex-1 items-center justify-between gap-2">
+          <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">
               {formatDateShort(treatment.date)}
@@ -71,6 +104,7 @@ export function TreatmentCard({ treatment, onClick, onDelete }: Props) {
             <Trash2 className="h-4 w-4" />
           </Button>
         )}
+        </div>
       </div>
     </Card>
   )

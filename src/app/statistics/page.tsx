@@ -5,57 +5,66 @@ import Link from 'next/link'
 import { ArrowLeft, BarChart2, TrendingUp, Users, Target, Activity, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { patientStore, icfStore } from '@/lib/storage'
-import { DOMAIN_META, type IcfDomainKey } from '@/features/icf/domain/types'
+import { getPatients } from '@/lib/supabase/patients'
+import { getIcfAssessments } from '@/lib/supabase/icf'
+import { DOMAIN_META, type IcfDomainKey, type IcfAssessment } from '@/features/icf/domain/types'
 
 export default function StatisticsPage() {
   const [hydrated, setHydrated] = useState(false)
+  const [stats, setStats] = useState<{
+    totalPatients: number
+    totalAssessments: number
+    topKeywords: { domain: IcfDomainKey; keywords: [string, number][] }[]
+  } | null>(null)
 
   useEffect(() => {
-    setHydrated(true)
-  }, [])
+    async function loadStats() {
+      const patients = await getPatients()
+      
+      const allAssessments: IcfAssessment[] = []
+      for (const p of patients) {
+        const assessments = await getIcfAssessments(p.id)
+        allAssessments.push(...assessments)
+      }
+      
+      const keywordCounts: Record<IcfDomainKey, Record<string, number>> = {
+        body: {},
+        activity: {},
+        participation: {},
+        environment: {},
+        personal: {},
+      }
 
-  const stats = useMemo(() => {
-    if (!hydrated) return null
-
-    const patients = patientStore.getAllPatients()
-    const allAssessments = patients.flatMap(p => icfStore.getIcfAssessments(p.id))
-    
-    const keywordCounts: Record<IcfDomainKey, Record<string, number>> = {
-      body: {},
-      activity: {},
-      participation: {},
-      environment: {},
-      personal: {},
-    }
-
-    allAssessments.forEach(a => {
-      Object.entries(a.finalDomains).forEach(([domain, items]) => {
-        items.forEach((item: string) => {
-          const d = domain as IcfDomainKey
-          keywordCounts[d][item] = (keywordCounts[d][item] || 0) + 1
+      allAssessments.forEach(a => {
+        Object.entries(a.finalDomains).forEach(([domain, items]) => {
+          items.forEach((item: string) => {
+            const d = domain as IcfDomainKey
+            keywordCounts[d][item] = (keywordCounts[d][item] || 0) + 1
+          })
         })
       })
-    })
 
-    const topKeywords = Object.entries(keywordCounts).map(([domain, counts]) => {
-      const sorted = Object.entries(counts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5)
-      return {
-        domain: domain as IcfDomainKey,
-        keywords: sorted
-      }
-    })
+      const topKeywords = Object.entries(keywordCounts).map(([domain, counts]) => {
+        const sorted = Object.entries(counts)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5)
+        return {
+          domain: domain as IcfDomainKey,
+          keywords: sorted
+        }
+      })
 
-    return {
-      totalPatients: patients.length,
-      totalAssessments: allAssessments.length,
-      topKeywords
+      setStats({
+        totalPatients: patients.length,
+        totalAssessments: allAssessments.length,
+        topKeywords
+      })
+      setHydrated(true)
     }
-  }, [hydrated])
+    loadStats()
+  }, [])
 
-  if (!hydrated) return null
+  if (!hydrated) return <div className="flex justify-center items-center h-screen text-muted-foreground text-sm">불러오는 중...</div>
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 p-4 pb-24 min-h-screen bg-slate-50/50">

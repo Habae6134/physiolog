@@ -10,7 +10,7 @@ import { PatientInfo } from '@/features/patients/components/PatientInfo'
 import { TreatmentList } from '@/features/treatments/components/TreatmentList'
 import { EvaluationList } from '@/features/evaluations/components/EvaluationList'
 import { IcfTab } from '@/features/icf/components/IcfTab'
-import { patientStore } from '@/lib/storage'
+import { getPatient } from '@/lib/supabase/patients'
 import type { Patient } from '@/features/patients/domain/types'
 
 type PageProps = { params: Promise<{ id: string }> }
@@ -25,7 +25,10 @@ export default function PatientDetailPage({ params }: PageProps) {
   const [patient, setPatient] = useState<Patient | null | undefined>(undefined)
 
   useEffect(() => {
-    setPatient(patientStore.getPatient(id) ?? null)
+    async function load() {
+      setPatient(await getPatient(id))
+    }
+    load()
   }, [id])
 
   const tabFromUrl = searchParams.get('tab')

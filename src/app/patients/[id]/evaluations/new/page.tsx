@@ -6,7 +6,9 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { EvaluationForm } from '@/features/evaluations/components/EvaluationForm'
-import { evaluationFavoritesStore, evaluationStore, patientStore } from '@/lib/storage'
+import { evaluationFavoritesStore } from '@/lib/storage'
+import { getPatient } from '@/lib/supabase/patients'
+import { createEvaluation } from '@/lib/supabase/evaluations'
 import type { EvaluationFormValues } from '@/features/evaluations/domain/schema'
 import type { Patient } from '@/features/patients/domain/types'
 import type { EvaluationInput, MMTGrade } from '@/features/evaluations/domain/types'
@@ -19,10 +21,13 @@ export default function NewEvaluationPage({ params }: PageProps) {
   const [patient, setPatient] = useState<Patient | null | undefined>(undefined)
 
   useEffect(() => {
-    setPatient(patientStore.getPatient(patientId) ?? null)
+    async function load() {
+      setPatient(await getPatient(patientId))
+    }
+    load()
   }, [patientId])
 
-  function handleSubmit(values: EvaluationFormValues) {
+  async function handleSubmit(values: EvaluationFormValues) {
     const input: EvaluationInput = {
       patientId,
       date: values.date,
@@ -36,17 +41,21 @@ export default function NewEvaluationPage({ params }: PageProps) {
       custom: values.toggleCustom ? values.custom : undefined,
     }
 
-    if (values.toggleCustom && values.custom) {
-      values.custom.forEach((c) => {
-        if (c.name.trim()) {
-          evaluationFavoritesStore.recordEvaluationUsage(c.name)
-        }
-      })
-    }
+    const result = await createEvaluation(input)
 
-    evaluationStore.createEvaluation(input)
-    toast.success('검사 저장됨')
-    router.replace(`/patients/${patientId}?tab=evaluations`)
+    if (result.success) {
+      if (values.toggleCustom && values.custom) {
+        values.custom.forEach((c) => {
+          if (c.name.trim()) {
+            evaluationFavoritesStore.recordEvaluationUsage(c.name)
+          }
+        })
+      }
+      toast.success('검사 저장됨')
+      router.replace(`/patients/${patientId}?tab=evaluations`)
+    } else {
+      toast.error('검사 기록 저장 실패', { description: result.error })
+    }
   }
 
   if (patient === undefined) {

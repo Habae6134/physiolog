@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { PatientForm } from '@/features/patients/components/PatientForm'
-import { patientStore } from '@/lib/storage'
+import { getPatient, updatePatient } from '@/lib/supabase/patients'
 import type { PatientFormValues } from '@/features/patients/domain/schema'
 import type { Patient } from '@/features/patients/domain/types'
 
@@ -18,13 +18,16 @@ export default function EditPatientPage({ params }: PageProps) {
   const [patient, setPatient] = useState<Patient | null | undefined>(undefined)
 
   useEffect(() => {
-    setPatient(patientStore.getPatient(id) ?? null)
+    async function load() {
+      setPatient(await getPatient(id))
+    }
+    load()
   }, [id])
 
-  function handleSubmit(values: PatientFormValues) {
-    const updated = patientStore.updatePatient(id, values)
-    if (!updated) {
-      toast.error('수정 실패: 환자를 찾을 수 없습니다.')
+  async function handleSubmit(values: PatientFormValues) {
+    const result = await updatePatient(id, values)
+    if (!result.success) {
+      toast.error('수정 실패: ' + result.error)
       return
     }
     toast.success('환자 정보 수정됨')

@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
@@ -47,6 +48,13 @@ export function TreatmentForm({
     mode: 'onSubmit',
   })
 
+  // 비동기로 넘어온 defaultValues를 반영하기 위해 reset 사용
+  useEffect(() => {
+    if (defaultValues && Object.keys(defaultValues).length > 0) {
+      form.reset({ ...EMPTY_DEFAULTS, ...defaultValues } as any)
+    }
+  }, [defaultValues, form])
+
   const handleFormSubmit: SubmitHandler<TreatmentFormValues> = async (values) => {
     await onSubmit(values)
   }
@@ -75,7 +83,7 @@ export function TreatmentForm({
 
         <Separator />
 
-        <Section title="치료 부위" subtitle="여러 부위 선택 가능 · 위에서 아래 순서">
+        <Section title="치료 부위" subtitle="여러 부위 선택 가능 · 위에서 아래 순서" required>
           <BodyPartSelector />
           {errors.bodyParts && typeof errors.bodyParts.message === 'string' && (
             <p className="text-sm text-destructive">
@@ -86,7 +94,7 @@ export function TreatmentForm({
 
         <Separator />
 
-        <Section title="치료 방법" subtitle="여러 개 선택 가능">
+        <Section title="치료 방법" subtitle="여러 개 선택 가능" required>
           <MethodSelector />
           {errors.methods && typeof errors.methods.message === 'string' && (
             <p className="text-sm text-destructive">{errors.methods.message}</p>
@@ -95,14 +103,14 @@ export function TreatmentForm({
 
         <Separator />
 
-        <Section title="오늘의 특이사항" subtitle="델타 플래그 · AI 재평가 요약에 활용됩니다">
+        <Section title="오늘의 특이사항" subtitle="델타 플래그 · AI 재평가 요약에 활용됩니다" optional>
           <FlagSelector />
         </Section>
 
         {showExercise && (
           <>
             <Separator />
-            <Section title="운동치료" subtitle="목적 선택 + 운동 추가">
+            <Section title="운동치료" subtitle="목적 선택 + 운동 추가" optional>
               <ExerciseSection />
             </Section>
           </>
@@ -110,7 +118,7 @@ export function TreatmentForm({
 
         <Separator />
 
-        <Section title="숙제" subtitle="과제·운동 등">
+        <Section title="숙제" subtitle="과제·운동 등" optional>
           <Textarea
             rows={3}
             placeholder="예: 집에서 아침/저녁으로 폼롤러 스트레칭 10분 수행"
@@ -120,7 +128,7 @@ export function TreatmentForm({
 
         <Separator />
 
-        <Section title="당일 코멘트" subtitle="환자 반응·특이사항">
+        <Section title="당일 코멘트" subtitle="환자 반응·특이사항" optional>
           <Textarea
             rows={4}
             placeholder="예: 통증 호소 줄어듦. 다음 회기엔 코어 안정화 추가 예정."
@@ -153,16 +161,24 @@ export function TreatmentForm({
 function Section({
   title,
   subtitle,
+  required,
+  optional,
   children,
 }: {
   title: string
   subtitle?: string
+  required?: boolean
+  optional?: boolean
   children: React.ReactNode
 }) {
   return (
     <section className="flex flex-col gap-3">
       <div>
-        <Label className="text-base font-semibold">{title}</Label>
+        <div className="flex items-center gap-1.5">
+          <Label className="text-base font-semibold">{title}</Label>
+          {required && <span className="text-destructive font-bold text-lg leading-none">*</span>}
+          {optional && <span className="text-[10px] font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded leading-none">선택사항</span>}
+        </div>
         {subtitle && (
           <p className="text-xs text-muted-foreground">{subtitle}</p>
         )}

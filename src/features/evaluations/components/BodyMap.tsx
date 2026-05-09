@@ -165,7 +165,6 @@ export function BodyMap({ value, onChange, readOnly = false }: Props) {
               <span className={getPainColor(p.pattern)}>
                 {p.pattern === 'custom' ? (p.customPatternLabel || '기타') : patternLabel(p.pattern)}
               </span>
-              <span className="ml-1 font-mono text-primary bg-primary/10 px-1 rounded">VAS {p.intensity}</span>
               <button type="button" onClick={() => removePain(p.id)} className="ml-1 p-0.5 hover:bg-destructive/10 hover:text-destructive rounded-full transition-colors">
                 <X className="w-3 h-3" />
               </button>
@@ -215,27 +214,6 @@ export function BodyMap({ value, onChange, readOnly = false }: Props) {
                 />
               </div>
             )}
-
-            <div className="grid gap-4">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">통증 점수 (VAS)</Label>
-                <span className="text-xl font-bold text-primary">{intensity}</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="10"
-                step="1"
-                value={intensity}
-                onChange={(e) => setIntensity(Number(e.target.value))}
-                className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
-              />
-              <div className="flex justify-between text-[10px] text-muted-foreground px-1">
-                <span>없음 (0)</span>
-                <span>보통 (5)</span>
-                <span>매우 강함 (10)</span>
-              </div>
-            </div>
 
             <div className="flex gap-2 pt-2">
               <Button 

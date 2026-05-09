@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { TreatmentForm } from '@/features/treatments/components/TreatmentForm'
-import { treatmentStore, patientStore } from '@/lib/storage'
+import { getPatient } from '@/lib/supabase/patients'
+import { getTreatment, updateTreatment } from '@/lib/supabase/treatments'
 import type { TreatmentFormValues } from '@/features/treatments/domain/schema'
 import type { Patient } from '@/features/patients/domain/types'
 import type { Treatment } from '@/features/treatments/domain/types'
@@ -20,12 +21,15 @@ export default function EditTreatmentPage({ params }: PageProps) {
   const [treatment, setTreatment] = useState<Treatment | null | undefined>(undefined)
 
   useEffect(() => {
-    setPatient(patientStore.getPatient(patientId) ?? null)
-    setTreatment(treatmentStore.getTreatment(patientId, treatmentId) ?? null)
+    async function load() {
+      setPatient(await getPatient(patientId))
+      setTreatment(await getTreatment(treatmentId))
+    }
+    load()
   }, [patientId, treatmentId])
 
-  function handleSubmit(values: TreatmentFormValues) {
-    treatmentStore.updateTreatment(patientId, treatmentId, {
+  async function handleSubmit(values: TreatmentFormValues) {
+    const result = await updateTreatment(treatmentId, patientId, {
       date: values.date,
       bodyParts: values.bodyParts,
       methods: values.methods,
@@ -36,8 +40,12 @@ export default function EditTreatmentPage({ params }: PageProps) {
       comment: values.comment,
       flags: values.flags,
     })
-    toast.success('치료 수정됨')
-    router.replace(`/patients/${patientId}?tab=treatments`)
+    if (result.success) {
+      toast.success('치료 수정됨')
+      router.replace(`/patients/${patientId}?tab=treatments`)
+    } else {
+      toast.error('수정 실패', { description: result.error })
+    }
   }
 
   if (patient === undefined || treatment === undefined) {
@@ -60,11 +68,11 @@ export default function EditTreatmentPage({ params }: PageProps) {
     date: treatment.date,
     bodyParts: treatment.bodyParts as TreatmentFormValues['bodyParts'],
     methods: treatment.methods,
-    otherTreatmentMethod: treatment.otherTreatmentMethod,
-    exerciseConcept: treatment.exerciseConcept,
+    otherTreatmentMethod: treatment.otherTreatmentMethod ?? undefined,
+    exerciseConcept: treatment.exerciseConcept ?? undefined,
     exercises: (treatment.exercises ?? []) as TreatmentFormValues['exercises'],
     homework: treatment.homework ?? '',
-    comment: treatment.comment,
+    comment: treatment.comment ?? '',
     flags: treatment.flags ?? [],
   }
 

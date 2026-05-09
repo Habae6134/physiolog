@@ -8,8 +8,8 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { IcfDomainCard } from './IcfDomainCard'
-import { icfStore } from '@/lib/storage'
 import { getApiKey } from '@/lib/storage/api-settings'
+import { createIcfAssessment } from '@/lib/supabase/icf'
 import { mergeDomains, DOMAIN_KEYS, type IcfTurn, type IcfAnalysisResult } from '@/features/icf/domain/types'
 
 interface ApiMessage {
@@ -107,18 +107,24 @@ export function IcfAssessmentForm({ patientId }: Props) {
     analyze(`[추가 정보]\n${followUp}`)
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (turns.length === 0) return
     const merged = mergeDomains(turns)
     const lastNote = currentResult?.clinicalNote ?? ''
-    icfStore.createIcfAssessment(patientId, {
+    
+    const result = await createIcfAssessment(patientId, {
       date: new Date().toISOString().slice(0, 10),
       turns,
       finalDomains: merged,
       finalNote: lastNote,
     })
-    toast.success('평가가 저장되었습니다.')
-    router.push(`/patients/${patientId}?tab=icf`)
+
+    if (result.success) {
+      toast.success('평가가 저장되었습니다.')
+      router.push(`/patients/${patientId}?tab=icf`)
+    } else {
+      toast.error('평가 저장 실패', { description: result.error })
+    }
   }
 
   function handleReset() {
@@ -164,10 +170,13 @@ export function IcfAssessmentForm({ patientId }: Props) {
 
           {/* 태그 클라우드 */}
           <div className="mt-4 space-y-4 rounded-xl border border-dashed p-4 bg-muted/20">
-            <h3 className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5" />
-              키워드 태깅 (빠른 입력)
-            </h3>
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
+                키워드 태깅 (빠른 입력)
+              </h3>
+              <span className="text-[10px] font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded leading-none">선택사항</span>
+            </div>
             <div className="space-y-3">
               {TAG_CATEGORIES.map((cat) => (
                 <div key={cat.label} className="space-y-1.5">

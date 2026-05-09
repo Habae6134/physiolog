@@ -3,12 +3,14 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ClipboardList, Plus } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { EvaluationCard } from './EvaluationCard'
 import { EvaluationChart } from './EvaluationChart'
 import { EvaluationDetailSheet } from './EvaluationDetailSheet'
 import { GraphSettingsDialog } from './GraphSettingsDialog'
 import { evaluationStore } from '@/lib/storage'
+import { getEvaluations, deleteEvaluation } from '@/lib/supabase/evaluations'
 import type {
   Evaluation,
   GraphMetric,
@@ -21,11 +23,22 @@ export function EvaluationList({ patientId }: Props) {
   const [graphMetrics, setGraphMetrics] = useState<GraphMetric[]>([])
   const [hydrated, setHydrated] = useState(false)
   const [selected, setSelected] = useState<Evaluation | null>(null)
+  
+  const [isSelectionMode, setIsSelectionMode] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+
+  const loadEvaluations = async () => {
+    const data = await getEvaluations(patientId)
+    setEvaluations(data)
+  }
 
   useEffect(() => {
-    setEvaluations(evaluationStore.getEvaluations(patientId))
-    setGraphMetrics(evaluationStore.getGraphSettings(patientId).metrics)
-    setHydrated(true)
+    async function load() {
+      await loadEvaluations()
+      setGraphMetrics(evaluationStore.getGraphSettings(patientId).metrics)
+      setHydrated(true)
+    }
+    load()
   }, [patientId])
 
   const updateGraph = (metrics: GraphMetric[]) => {
@@ -33,11 +46,40 @@ export function EvaluationList({ patientId }: Props) {
     setGraphMetrics(metrics)
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (!confirm('이 검사를 삭제할까요?')) return
-    evaluationStore.deleteEvaluation(patientId, id)
-    setEvaluations(evaluationStore.getEvaluations(patientId))
+    await deleteEvaluation(id, patientId)
+    await loadEvaluations()
     setSelected(null)
+  }
+
+  const handleBatchDelete = async () => {
+    if (selectedIds.size === 0) return
+    if (!confirm(`선택한 ${selectedIds.size}건의 검사 기록을 삭제할까요?`)) return
+    
+    for (const id of selectedIds) {
+      await deleteEvaluation(id, patientId)
+    }
+    
+    await loadEvaluations()
+    setSelectedIds(new Set())
+    setIsSelectionMode(false)
+    toast.success('선택한 기록이 삭제되었습니다.')
+  }
+
+  const toggleSelect = (id: string) => {
+    const next = new Set(selectedIds)
+    if (next.has(id)) {
+      next.delete(id)
+    } else {
+      next.add(id)
+    }
+    setSelectedIds(next)
+  }
+
+  const toggleSelectionMode = () => {
+    setIsSelectionMode(!isSelectionMode)
+    setSelectedIds(new Set())
   }
 
   const hasAny = evaluations.length > 0
@@ -76,8 +118,43 @@ export function EvaluationList({ patientId }: Props) {
       {/* 평가 리스트 */}
       <section className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold">검사 기록</h3>
-          <Button asChild size="sm"><Link href={`/patients/${patientId}/evaluations/new`}><Plus className="mr-1 h-4 w-4" />검사 입력</Link></Button>
+          <div className="flex flex-col gap-0.5">
+            <h3 className="text-sm font-semibold">검사 기록</h3>
+            {isSelectionMode && (
+              <p className="text-[10px] font-medium text-primary">
+                {selectedIds.size}개 선택됨
+              </p>
+            )}
+          </div>
+          
+          <div className="flex gap-2">
+            {hasAny && !isSelectionMode && (
+              <Button variant="ghost" size="sm" onClick={toggleSelectionMode} className="text-xs h-8">
+                선택
+              </Button>
+            )}
+            
+            {isSelectionMode && (
+              <>
+                <Button variant="ghost" size="sm" onClick={toggleSelectionMode} className="text-xs h-8">
+                  취소
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  onClick={handleBatchDelete}
+                  disabled={selectedIds.size === 0}
+                  className="h-8"
+                >
+                  삭제 ({selectedIds.size})
+                </Button>
+              </>
+            )}
+
+            {!isSelectionMode && (
+              <Button asChild size="sm"><Link href={`/patients/${patientId}/evaluations/new`}><Plus className="mr-1 h-4 w-4" />검사 입력</Link></Button>
+            )}
+          </div>
         </div>
 
         {hydrated && !hasAny && (
@@ -100,6 +177,10 @@ export function EvaluationList({ patientId }: Props) {
                 key={e.id}
                 evaluation={e}
                 onClick={() => setSelected(e)}
+                onDelete={isSelectionMode ? undefined : handleDelete}
+                isSelectionMode={isSelectionMode}
+                isSelected={selectedIds.has(e.id)}
+                onSelect={toggleSelect}
               />
             ))}
           </div>

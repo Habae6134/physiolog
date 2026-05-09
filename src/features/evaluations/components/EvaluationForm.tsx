@@ -118,13 +118,20 @@ export function EvaluationForm({
 
         <ToggleSection
           title="통증"
-          subtitle="통증 부위 및 양상 (VAS 포함)"
+          subtitle="통증 부위 및 양상 (VAS 필수)"
           name="togglePainMapping"
+          required
         >
-          <BodyMap 
-            value={form.watch('painMapping')} 
-            onChange={(v) => form.setValue('painMapping', v, { shouldDirty: true })} 
-          />
+          <div className="flex flex-col gap-4">
+            <div className="rounded-lg border bg-muted/30 p-4">
+              <Label className="mb-2 block text-xs font-bold text-muted-foreground uppercase tracking-wider">VAS (통증 점수) *</Label>
+              <VASInput />
+            </div>
+            <BodyMap 
+              value={form.watch('painMapping')} 
+              onChange={(v) => form.setValue('painMapping', v, { shouldDirty: true })} 
+            />
+          </div>
         </ToggleSection>
 
         {errors.toggleVas?.message && (
@@ -159,11 +166,13 @@ function ToggleSection({
   title,
   subtitle,
   name,
+  required,
   children,
 }: {
   title: string
   subtitle?: string
   name: ToggleName
+  required?: boolean
   children: React.ReactNode
 }) {
   const { watch, setValue } = useFormContext<EvaluationFormValues>()
@@ -172,7 +181,10 @@ function ToggleSection({
     <section className="flex flex-col gap-2">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <Label className="text-base font-semibold">{title}</Label>
+          <div className="flex items-center gap-1.5">
+            <Label className="text-base font-semibold">{title}</Label>
+            {required && <span className="text-destructive font-bold text-lg leading-none">*</span>}
+          </div>
           {subtitle && (
             <p className="text-xs text-muted-foreground">{subtitle}</p>
           )}
