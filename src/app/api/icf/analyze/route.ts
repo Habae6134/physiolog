@@ -1,29 +1,39 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
 import { ICF_SYSTEM_PROMPT } from '@/data/icf-system-prompt'
+import { createClient } from '@/lib/supabase/server'
 
 // 시스템 프롬프트는 서버 코드에 고정 — 사용자 입력으로 절대 변경 불가
+// API 키는 서버 환경변수(ANTHROPIC_API_KEY)에서만 읽어옴 — 클라이언트 BYOK 미지원
+// 인증된(로그인) 사용자만 호출 가능 — 세션 체크 필수
 
 interface ApiMessage {
   role: 'user' | 'assistant'
   content: string
 }
 
-export async function POST(req: NextRequest) {
-  const authHeader = req.headers.get('Authorization')
-  const userKey = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
-  const apiKey = userKey ?? process.env.ANTHROPIC_API_KEY
+const MODEL_ID = 'claude-sonnet-4-6'
 
-  if (!apiKey || apiKey === 'your_api_key_here') {
+export async function POST(req: NextRequest) {
+  // 1. 세션 체크 — 로그인된 사용자만 허용
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 })
+  }
+
+  // 2. 서버 환경변수에서만 API 키 사용
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) {
     return NextResponse.json(
-      { error: 'API 키가 없습니다. 설정(⚙️)에서 Anthropic API 키를 입력해주세요.' },
-      { status: 401 },
+      { error: 'AI 평가 기능이 비활성화되어 있습니다. 관리자에게 문의해주세요.' },
+      { status: 503 },
     )
   }
 
+  // 3. 입력 검증
   const body = await req.json() as { input: string; history?: ApiMessage[] }
   const { input, history = [] } = body
-
   if (!input?.trim()) {
     return NextResponse.json({ error: '입력값이 없습니다.' }, { status: 400 })
   }
@@ -33,7 +43,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const response = await client.messages.create({
-      model: 'claude-3-7-sonnet-latest',
+      model: MODEL_ID,
       max_tokens: 2048,
       system: ICF_SYSTEM_PROMPT,
       messages,
@@ -51,10 +61,10 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     if (err instanceof Anthropic.APIError) {
       const msg = err.status === 400 && err.message.includes('credit')
-        ? '크레딧이 부족합니다. console.anthropic.com → Plans & Billing에서 충전해주세요.'
+        ? 'AI 사용량 한도에 도달했습니다. 관리자에게 문의해주세요.'
         : err.status === 401
-        ? 'API 키가 유효하지 않습니다. 설정에서 키를 다시 확인해주세요.'
-        : `API 오류 (${err.status}): ${err.message}`
+        ? 'AI 평가 설정에 문제가 있습니다. 관리자에게 문의해주세요.'
+        : `AI 분석 오류 (${err.status})`
       return NextResponse.json({ error: msg }, { status: err.status ?? 500 })
     }
     return NextResponse.json({ error: '알 수 없는 오류가 발생했습니다.' }, { status: 500 })
