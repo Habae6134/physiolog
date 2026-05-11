@@ -8,7 +8,6 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { IcfDomainCard } from './IcfDomainCard'
-import { getApiKey } from '@/lib/storage/api-settings'
 import { createIcfAssessment } from '@/lib/supabase/icf'
 import { mergeDomains, DOMAIN_KEYS, type IcfTurn, type IcfAnalysisResult } from '@/features/icf/domain/types'
 
@@ -63,13 +62,9 @@ export function IcfAssessmentForm({ patientId }: Props) {
 
     const newHistory: ApiMessage[] = [...history, { role: 'user', content: userInput }]
 
-    const apiKey = getApiKey()
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-    if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`
-
     const res = await fetch('/api/icf/analyze', {
       method: 'POST',
-      headers,
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ input: userInput, history }),
     })
 
