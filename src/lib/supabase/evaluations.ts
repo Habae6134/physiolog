@@ -22,6 +22,23 @@ export async function getEvaluations(patientId: string): Promise<Evaluation[]> {
   return data.map(dbToEvaluation)
 }
 
+// 특정 검사 기록 상세 조회
+export async function getEvaluation(id: string): Promise<Evaluation | null> {
+  const supabase = await createClient()
+  
+  const { data, error } = await supabase
+    .from('evaluations')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error || !data) {
+    return null
+  }
+
+  return dbToEvaluation(data)
+}
+
 // 검사 기록 등록
 export async function createEvaluation(input: EvaluationInput): Promise<{ success: boolean; data?: Evaluation; error?: string }> {
   const supabase = await createClient()
