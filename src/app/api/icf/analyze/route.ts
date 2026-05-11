@@ -2,10 +2,12 @@ import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
 import { ICF_SYSTEM_PROMPT } from '@/data/icf-system-prompt'
 import { createClient } from '@/lib/supabase/server'
+import { buildPatientContext } from '@/features/icf/domain/patient-context'
 
 // 시스템 프롬프트는 서버 코드에 고정 — 사용자 입력으로 절대 변경 불가
 // API 키는 서버 환경변수(ANTHROPIC_API_KEY)에서만 읽어옴 — 클라이언트 BYOK 미지원
 // 인증된(로그인) 사용자만 호출 가능 — 세션 체크 필수
+// 환자 컨텍스트(기본정보 + 최근 평가 + 최근 치료)는 서버에서 fetch해서 system prompt에 자동 주입
 
 interface ApiMessage {
   role: 'user' | 'assistant'
@@ -32,10 +34,21 @@ export async function POST(req: NextRequest) {
   }
 
   // 3. 입력 검증
-  const body = await req.json() as { input: string; history?: ApiMessage[] }
-  const { input, history = [] } = body
+  const body = await req.json() as { input: string; history?: ApiMessage[]; patientId?: string }
+  const { input, history = [], patientId } = body
   if (!input?.trim()) {
     return NextResponse.json({ error: '입력값이 없습니다.' }, { status: 400 })
+  }
+
+  // 4. 환자 컨텍스트 주입 (실패해도 분석 자체는 진행)
+  let systemPrompt = ICF_SYSTEM_PROMPT
+  if (patientId) {
+    try {
+      const ctx = await buildPatientContext(patientId)
+      if (ctx) systemPrompt = `${ICF_SYSTEM_PROMPT}\n\n${ctx}`
+    } catch (err) {
+      console.error('Failed to build patient context, falling back to base prompt:', err)
+    }
   }
 
   const client = new Anthropic({ apiKey })
@@ -45,7 +58,7 @@ export async function POST(req: NextRequest) {
     const response = await client.messages.create({
       model: MODEL_ID,
       max_tokens: 2048,
-      system: ICF_SYSTEM_PROMPT,
+      system: systemPrompt,
       messages,
     })
 

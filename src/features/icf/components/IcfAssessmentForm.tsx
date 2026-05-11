@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Loader2, Sparkles, MessageSquare, Save, RefreshCw } from 'lucide-react'
+import { Loader2, Sparkles, MessageSquare, Save, RefreshCw, Info } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -65,7 +65,7 @@ export function IcfAssessmentForm({ patientId }: Props) {
     const res = await fetch('/api/icf/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ input: userInput, history }),
+      body: JSON.stringify({ input: userInput, history, patientId }),
     })
 
     let data: { result?: IcfAnalysisResult; error?: string; assistantMessage?: string }
@@ -151,6 +151,18 @@ export function IcfAssessmentForm({ patientId }: Props) {
               환자와의 초기 상담, 임상 관찰, 수행 관찰 내용을 자유롭게 적어주세요. AI가 5개 영역으로 분류합니다.
             </p>
           </div>
+
+          {/* 환자 컨텍스트 자동 참고 안내 */}
+          <div className="flex items-start gap-2 rounded-md border border-blue-100 bg-blue-50/60 px-3 py-2 text-xs text-blue-800">
+            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-500" />
+            <div>
+              <span className="font-semibold">환자 컨텍스트 자동 참고</span>
+              <span className="ml-1 text-blue-700/90">
+                — 이 환자의 기본정보 · 최근 평가 1건 · 최근 치료 1건을 AI에게 자동 전달합니다. 새로 관찰한 내용 위주로 입력하세요.
+              </span>
+            </div>
+          </div>
+
           <Textarea
             placeholder={`예시:\n40대 남성, 공장 라인 근무. 3주 전 허리를 삐끗한 후 요통 발생. VAS 7/10. 허리 굽히기 어려워 신발 신기, 물건 줍기 어려움. 빨리 직장에 복귀하고 싶어함. 가족은 안정을 권유 중.`}
             value={input}
