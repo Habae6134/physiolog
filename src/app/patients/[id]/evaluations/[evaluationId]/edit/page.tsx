@@ -31,7 +31,8 @@ export default function EditEvaluationPage({ params }: PageProps) {
   async function handleSubmit(values: EvaluationFormValues) {
     const result = await updateEvaluation(evaluationId, patientId, {
       date: values.date,
-      vas: values.toggleVas ? values.vas : undefined,
+      // VAS는 통증/VAS 토글 어느 쪽이든 켜져 있으면 저장 (스키마 refine과 일관성 유지)
+      vas: values.toggleVas || values.togglePainMapping ? values.vas : undefined,
       rom: values.toggleRom ? values.rom : undefined,
       mmt: values.toggleMmt
         ? values.mmt.map((m) => ({ ...m, grade: m.grade as MMTGrade }))
