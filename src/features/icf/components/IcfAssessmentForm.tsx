@@ -1,16 +1,22 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Loader2, Sparkles, MessageSquare, Save, RefreshCw } from 'lucide-react'
+import { Loader2, Sparkles, MessageSquare, Save, RefreshCw, X, Info } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
 import { IcfDomainCard } from './IcfDomainCard'
 import { getApiKey } from '@/lib/storage/api-settings'
 import { createIcfAssessment } from '@/lib/supabase/icf'
+import { getPatient } from '@/lib/supabase/patients'
+import { getEvaluations } from '@/lib/supabase/evaluations'
+import { formatPatientContext } from '../lib/icf-utils'
 import { mergeDomains, DOMAIN_KEYS, type IcfTurn, type IcfAnalysisResult } from '@/features/icf/domain/types'
+import type { Patient } from '@/features/patients/domain/types'
+import type { Evaluation } from '@/features/evaluations/domain/types'
 
 interface ApiMessage {
   role: 'user' | 'assistant'
@@ -54,6 +60,22 @@ export function IcfAssessmentForm({ patientId }: Props) {
   const [turns, setTurns] = useState<IcfTurn[]>([])
   const [history, setHistory] = useState<ApiMessage[]>([])
   const [currentResult, setCurrentResult] = useState<IcfAnalysisResult | null>(null)
+  const [patient, setPatient] = useState<Patient | null>(null)
+  const [evaluations, setEvaluations] = useState<Evaluation[]>([])
+  const [context, setContext] = useState<string>('')
+
+  useEffect(() => {
+    async function loadData() {
+      const p = await getPatient(patientId)
+      const evs = await getEvaluations(patientId)
+      if (p) {
+        setPatient(p)
+        setEvaluations(evs)
+        setContext(formatPatientContext(p, evs))
+      }
+    }
+    loadData()
+  }, [patientId])
 
   const latestDomains = turns.length > 0 ? mergeDomains(turns) : null
 
@@ -70,7 +92,11 @@ export function IcfAssessmentForm({ patientId }: Props) {
     const res = await fetch('/api/icf/analyze', {
       method: 'POST',
       headers,
-      body: JSON.stringify({ input: userInput, history }),
+      body: JSON.stringify({ 
+        input: userInput, 
+        history,
+        context: history.length === 0 ? context : undefined // 첫 요청에만 컨텍스트 포함
+      }),
     })
 
     let data: { result?: IcfAnalysisResult; error?: string; assistantMessage?: string }
@@ -156,14 +182,36 @@ export function IcfAssessmentForm({ patientId }: Props) {
               환자와의 초기 상담, 임상 관찰, 수행 관찰 내용을 자유롭게 적어주세요. AI가 5개 영역으로 분류합니다.
             </p>
           </div>
-          <Textarea
-            placeholder={`예시:\n40대 남성, 공장 라인 근무. 3주 전 허리를 삐끗한 후 요통 발생. VAS 7/10. 허리 굽히기 어려워 신발 신기, 물건 줍기 어려움. 빨리 직장에 복귀하고 싶어함. 가족은 안정을 권유 중.`}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            rows={6}
-            className="resize-none text-sm"
-          />
-          <Button onClick={handleInitialSubmit} disabled={!input.trim()} className="w-full gap-2 shadow-lg shadow-primary/20">
+          <div className="relative">
+            <Textarea
+              placeholder={`예시:\n40대 남성, 공장 라인 근무. 3주 전 허리를 삐끗한 후 요통 발생. VAS 7/10. 허리 굽히기 어려워 신발 신기, 물건 줍기 어려움. 빨리 직장에 복귀하고 싶어함. 가족은 안정을 권유 중.`}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              rows={6}
+              className="resize-none text-sm pr-10 focus-visible:ring-primary/30"
+            />
+            {input && (
+              <button
+                onClick={() => setInput('')}
+                className="absolute right-3 top-3 rounded-full p-1 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          {context && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2 border border-primary/10"
+            >
+              <Info className="h-3.5 w-3.5 text-primary" />
+              <p className="text-[11px] text-primary/80 font-medium">환자 기본 정보 및 최근 검사 기록이 분석에 자동 포함됩니다.</p>
+            </motion.div>
+          )}
+
+          <Button onClick={handleInitialSubmit} disabled={!input.trim()} className="w-full gap-2 shadow-lg shadow-primary/20 h-11 text-base font-semibold">
             <Sparkles className="h-4 w-4" />
             분석 시작
           </Button>
@@ -183,13 +231,14 @@ export function IcfAssessmentForm({ patientId }: Props) {
                   <p className="text-[10px] font-medium text-muted-foreground/70 ml-1">{cat.label}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {cat.tags.map((tag) => (
-                      <button
+                      <Badge
                         key={tag}
+                        variant="secondary"
+                        className={`cursor-pointer px-2.5 py-1 text-xs font-normal border transition-all active:scale-95 ${cat.color} ${input.includes(tag) ? 'ring-2 ring-primary ring-offset-1' : ''}`}
                         onClick={() => addTag(tag)}
-                        className={`px-2.5 py-1 rounded-full text-xs border transition-all active:scale-95 ${cat.color}`}
                       >
                         {tag}
-                      </button>
+                      </Badge>
                     ))}
                   </div>
                 </div>
@@ -204,11 +253,27 @@ export function IcfAssessmentForm({ patientId }: Props) {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="flex flex-col items-center justify-center gap-3 py-16"
+          className="flex flex-col items-center justify-center gap-4 py-20"
         >
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">프레임워크로 분석 중…</p>
-          <p className="text-xs text-muted-foreground/60">5개 영역 분류 및 임상 추론 생성</p>
+          <div className="relative">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+              className="h-12 w-12 rounded-full border-2 border-primary/20 border-t-primary"
+            />
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: [0.8, 1.1, 0.8], opacity: [0.5, 1, 0.5] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="absolute inset-0 flex items-center justify-center"
+            >
+              <Sparkles className="h-5 w-5 text-primary" />
+            </motion.div>
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-semibold text-foreground">AI 임상 추론 분석 중…</p>
+            <p className="text-xs text-muted-foreground mt-1">프레임워크에 따라 5개 영역으로 분류하고 있습니다.</p>
+          </div>
         </motion.div>
       )}
 

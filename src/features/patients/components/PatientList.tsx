@@ -211,6 +211,11 @@ export function PatientList() {
           <h1 className="text-2xl font-bold tracking-tight">환자 목록</h1>
         </div>
         <div className="flex items-center gap-1.5">
+          <Button variant="ghost" size="icon" asChild title="데이터 생성" className="h-9 w-9">
+            <Link href="/seed">
+              <Plus className="h-4 w-4 text-blue-600" />
+            </Link>
+          </Button>
           <Button variant="ghost" size="icon" asChild title="프로필 설정" className="h-9 w-9">
             <Link href="/profile">
               <UserCircle className="h-4 w-4 text-muted-foreground" />

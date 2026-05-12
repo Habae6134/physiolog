@@ -21,15 +21,23 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const body = await req.json() as { input: string; history?: ApiMessage[] }
-  const { input, history = [] } = body
+  const body = await req.json() as { input: string; history?: ApiMessage[]; context?: string }
+  const { input, history = [], context } = body
 
   if (!input?.trim()) {
     return NextResponse.json({ error: '입력값이 없습니다.' }, { status: 400 })
   }
 
   const client = new Anthropic({ apiKey })
-  const messages: ApiMessage[] = [...history, { role: 'user', content: input }]
+  
+  const messages: ApiMessage[] = []
+  
+  // 첫 대화일 때 컨텍스트가 있으면 삽입
+  if (history.length === 0 && context) {
+    messages.push({ role: 'user', content: `[환자 컨텍스트]\n${context}\n\n위 정보를 바탕으로 다음 입력을 분석해줘: ${input}` })
+  } else {
+    messages.push(...history, { role: 'user', content: input })
+  }
 
   try {
     const response = await client.messages.create({

@@ -17,18 +17,24 @@ export function IcfDomainCard({ domainKey, items, index }: Props) {
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -2 }}
       transition={{ duration: 0.3, delay: index * 0.08 }}
-      className={`rounded-lg border p-3 ${meta.bg} ${meta.border}`}
+      className={`rounded-xl border p-4 shadow-sm transition-shadow hover:shadow-md ${meta.bg} ${meta.border}`}
     >
-      <p className={`mb-2 text-xs font-semibold ${meta.color}`}>{meta.label}</p>
+      <div className="mb-3 flex items-center justify-between">
+        <p className={`text-xs font-bold uppercase tracking-wider ${meta.color}`}>
+          {meta.label}
+        </p>
+        <span className={`h-1.5 w-1.5 rounded-full ${meta.color.replace('text-', 'bg-')}`} />
+      </div>
 
       {isEmpty ? (
-        <p className="text-xs text-muted-foreground italic">정보 미확인</p>
+        <p className="text-[11px] text-muted-foreground/60 italic">정보 미확인</p>
       ) : (
-        <ul className="flex flex-col gap-1">
+        <ul className="flex flex-col gap-2">
           {items.map((item, i) => (
-            <li key={i} className="flex items-start gap-1.5 text-xs text-foreground">
-              <span className={`mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full ${meta.color.replace('text-', 'bg-')}`} />
+            <li key={i} className="flex items-start gap-2 text-xs text-foreground/90 leading-tight">
+              <span className="mt-1 text-[10px] opacity-40">•</span>
               {item}
             </li>
           ))}
