@@ -106,7 +106,7 @@ async function analyzeOnce(
 ): Promise<{ result: ReturnType<typeof icfAnalysisResultSchema.parse>; rawText: string }> {
   const response = await client.messages.create({
     model: MODEL_ID,
-    max_tokens: 2048,
+    max_tokens: 4096,
     system: systemPrompt,
     messages,
   })
