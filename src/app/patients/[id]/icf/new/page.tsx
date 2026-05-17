@@ -54,11 +54,11 @@ export default function IcfNewPage({ params }: PageProps) {
           <Button
             type="button"
             variant="outline"
-            size="sm"
+            size="default"
             onClick={() => setSheetOpen(true)}
-            className="shrink-0 gap-1.5 text-xs"
+            className="shrink-0 gap-2 border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:border-blue-300 hover:text-blue-800"
           >
-            <RefreshCw className="h-3.5 w-3.5" />
+            <RefreshCw className="h-4 w-4" />
             재평가
           </Button>
         )}
