@@ -56,7 +56,7 @@ export function IcfAssessmentForm({ patientId, initialInput: _initialInput, prev
   const router = useRouter()
   const [status, setStatus] = useState<Status>('idle')
   const [input, setInput] = useState('')
-  const [prevExpanded, setPrevExpanded] = useState(false)
+  const [prevExpanded, setPrevExpanded] = useState(!!previousAssessment)
   const [followUp, setFollowUp] = useState('')
   const [turns, setTurns] = useState<IcfTurn[]>([])
   const [history, setHistory] = useState<ApiMessage[]>([])
