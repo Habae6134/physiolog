@@ -120,8 +120,14 @@ export function metricKey(m: GraphMetric): string {
   }
 }
 
+// "90" → 90 / "0~180" or "0-180" → 180 (범위 입력 시 끝값 = 최대 가동범위 사용)
 export function parseRomNum(v: string | number | undefined): number | undefined {
   if (v === undefined || v === '') return undefined
-  const n = typeof v === 'number' ? v : Number(v)
-  return isNaN(n) ? undefined : n
+  if (typeof v === 'number') return isNaN(v) ? undefined : v
+  const parts = v.split(/[~\-–]/).map((s) => s.trim()).filter(Boolean)
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const n = Number(parts[i])
+    if (!isNaN(n)) return n
+  }
+  return undefined
 }
