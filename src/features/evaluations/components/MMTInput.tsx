@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { ToggleSide } from '@/features/treatments/components/ToggleSide'
-import { JOINTS } from '@/data/joints'
+import { JOINTS, getMovementById } from '@/data/joints'
 import { MMT_GRADE_LABELS } from '@/data/evaluation-options'
 import type { Side } from '@/features/treatments/domain/types'
 import type { EvaluationFormValues } from '@/features/evaluations/domain/schema'
@@ -55,7 +55,16 @@ export function MMTInput() {
                     }
                   >
                     <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="관절·동작 선택" />
+                      {jointId ? (() => {
+                        const mv = getMovementById(jointId)
+                        return mv ? (
+                          <span>{mv.joint.label} — {mv.movement.label}</span>
+                        ) : (
+                          <SelectValue placeholder="관절·동작 선택" />
+                        )
+                      })() : (
+                        <SelectValue placeholder="관절·동작 선택" />
+                      )}
                     </SelectTrigger>
                     <SelectContent>
                       {JOINTS.map((joint) => (
