@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Brain, CheckSquare, Plus, Square, Trash2 } from 'lucide-react'
+import { Brain, CheckSquare, Pencil, Plus, Square, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { IcfDomainCard } from './IcfDomainCard'
@@ -196,14 +196,21 @@ export function IcfTab({ patientId, initialAssessments }: Props) {
                 </div>
               )}
 
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleDelete(a.id)}
-                className="w-full gap-1.5 text-destructive hover:text-destructive"
-              >
-                <Trash2 className="h-3.5 w-3.5" />삭제
-              </Button>
+              <div className="flex gap-2">
+                <Button asChild variant="outline" size="sm" className="flex-1 gap-1.5">
+                  <Link href={`/patients/${patientId}/icf/${a.id}/edit`}>
+                    <Pencil className="h-3.5 w-3.5" />수정
+                  </Link>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDelete(a.id)}
+                  className="flex-1 gap-1.5 text-destructive hover:text-destructive"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />삭제
+                </Button>
+              </div>
             </div>
           )}
         </div>

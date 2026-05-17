@@ -66,6 +66,41 @@ export async function createIcfAssessment(
   return { success: true, data: dbToIcf(data) }
 }
 
+// ICF 평가 기록 수정
+export async function updateIcfAssessment(
+  id: string,
+  patientId: string,
+  updates: {
+    date?: string
+    turns?: IcfTurn[]
+    finalDomains?: IcfDomains
+    finalNote?: string
+  }
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient()
+
+  const dbUpdates: Record<string, unknown> = {}
+  if ('date' in updates) dbUpdates.date = updates.date
+  if ('turns' in updates) dbUpdates.turns = updates.turns
+  if ('finalDomains' in updates) dbUpdates.final_domains = updates.finalDomains
+  if ('finalNote' in updates) dbUpdates.final_note = updates.finalNote
+
+  const { error } = await supabase
+    .from('icf_assessments')
+    .update(dbUpdates)
+    .eq('id', id)
+
+  if (error) {
+    console.error('Error updating ICF assessment:', error)
+    return { success: false, error: error.message }
+  }
+
+  revalidatePath('/')
+  revalidatePath(`/patients/${patientId}`)
+
+  return { success: true }
+}
+
 // ICF 평가 기록 삭제
 export async function deleteIcfAssessment(id: string, patientId: string): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient()
