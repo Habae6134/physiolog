@@ -6,9 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, Copy } from 'lucide-react'
 import { toast } from 'sonner'
 import { TreatmentForm } from '@/features/treatments/components/TreatmentForm'
-import {
-  exerciseFavoritesStore,
-} from '@/lib/storage'
+import { exerciseFavoritesStore, exerciseHistoryStore } from '@/lib/storage'
 import { getPatient } from '@/lib/supabase/patients'
 import { getTreatment, getLatestTreatment, createTreatment } from '@/lib/supabase/treatments'
 import type { TreatmentFormValues } from '@/features/treatments/domain/schema'
@@ -87,8 +85,12 @@ export default function NewTreatmentPage({ params }: PageProps) {
       toast.error('치료 기록 저장 실패', { description: result.error })
       return
     }
-    // 운동 즐겨찾기 빈도 업데이트
-    values.exerciseGroups.flatMap((g) => g.exercises).forEach((e) => exerciseFavoritesStore.recordExerciseUsage(e.name))
+    // 운동 즐겨찾기 + 목적별 히스토리 기록
+    for (const group of values.exerciseGroups) {
+      const names = group.exercises.map((e) => e.name).filter(Boolean)
+      names.forEach((n) => exerciseFavoritesStore.recordExerciseUsage(n))
+      exerciseHistoryStore.addNames(group.concept, names)
+    }
     toast.success(copyMode ? '복사 저장 완료' : '치료 저장됨')
     router.replace(`/patients/${patientId}?tab=treatments`)
     // 페이지 unmount까지 isSubmitting 유지 — 버튼 깜빡임 방지

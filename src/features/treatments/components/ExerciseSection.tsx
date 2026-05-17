@@ -5,7 +5,6 @@ import { useFieldArray, useFormContext } from 'react-hook-form'
 import { Plus, Star, X, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
@@ -13,6 +12,7 @@ import { exerciseFavoritesStore, newId } from '@/lib/storage'
 import { EXERCISE_CONCEPT_OPTIONS, EXERCISE_CONCEPT_LABEL } from '@/data/treatment-options'
 import type { TreatmentFormValues } from '@/features/treatments/domain/schema'
 import type { ExerciseConcept } from '@/features/treatments/domain/types'
+import { ExerciseNameInput } from './ExerciseNameInput'
 
 type FavoriteEntry = { name: string; count: number; lastUsedAt: string }
 
@@ -165,10 +165,11 @@ function ExerciseGroupCard({ groupIdx, onRemove }: { groupIdx: number; onRemove:
                 <div key={field.id} className="flex flex-col gap-2 rounded-md border bg-background p-3">
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="shrink-0">{idx + 1}</Badge>
-                    <Input
-                      placeholder="운동명 (예: 스쿼트)"
-                      {...register(`exerciseGroups.${groupIdx}.exercises.${idx}.name`)}
-                      className="flex-1"
+                    <ExerciseNameInput
+                      concept={concept}
+                      value={watch(`exerciseGroups.${groupIdx}.exercises.${idx}.name`) ?? ''}
+                      onChange={(v) => setValue(`exerciseGroups.${groupIdx}.exercises.${idx}.name`, v, { shouldDirty: true })}
+                      placeholder="운동명 검색 또는 직접 입력"
                     />
                     <Button
                       type="button"

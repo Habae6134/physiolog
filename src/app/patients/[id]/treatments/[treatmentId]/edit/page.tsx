@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { TreatmentForm } from '@/features/treatments/components/TreatmentForm'
 import { getPatient } from '@/lib/supabase/patients'
 import { getTreatment, updateTreatment } from '@/lib/supabase/treatments'
+import { exerciseFavoritesStore, exerciseHistoryStore } from '@/lib/storage'
 import type { TreatmentFormValues } from '@/features/treatments/domain/schema'
 import type { Patient } from '@/features/patients/domain/types'
 import type { Treatment } from '@/features/treatments/domain/types'
@@ -44,6 +45,11 @@ export default function EditTreatmentPage({ params }: PageProps) {
     if (!result.success) {
       toast.error('수정 실패', { description: result.error })
       return
+    }
+    for (const group of values.exerciseGroups) {
+      const names = group.exercises.map((e) => e.name).filter(Boolean)
+      names.forEach((n) => exerciseFavoritesStore.recordExerciseUsage(n))
+      exerciseHistoryStore.addNames(group.concept, names)
     }
     toast.success('치료 수정됨')
     router.replace(`/patients/${patientId}?tab=treatments`)
