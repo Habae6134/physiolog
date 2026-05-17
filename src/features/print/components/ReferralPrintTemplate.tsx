@@ -291,6 +291,12 @@ export function ReferralPrintTemplate({
               <p className="leading-relaxed">{latestIcf.finalNote}</p>
             </div>
           )}
+          {latestIcf.longTermGoals?.filter(Boolean).length > 0 && (
+            <div className="mt-2 rounded border border-blue-200 bg-blue-50/60 p-2 text-[10pt] text-slate-700">
+              <p className="mb-0.5 text-xs font-semibold text-slate-600">치료 방향 (장기 목표 · 8주)</p>
+              <p className="leading-relaxed">{latestIcf.longTermGoals[0]}</p>
+            </div>
+          )}
         </section>
       )}
 

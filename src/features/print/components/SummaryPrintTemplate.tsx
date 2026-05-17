@@ -2,6 +2,7 @@ import { formatDate } from '@/lib/utils/date'
 import type { Patient } from '@/features/patients/domain/types'
 import type { Treatment } from '@/features/treatments/domain/types'
 import type { Evaluation } from '@/features/evaluations/domain/types'
+import type { IcfAssessment } from '@/features/icf/domain/types'
 import { BODY_REGIONS } from '@/data/body-parts'
 
 /**
@@ -13,8 +14,9 @@ type Props = {
   patient: Patient
   treatments: Treatment[]
   evaluations: Evaluation[]
-  generatedAt: string // ISO date — 인쇄 일시
-  authorName?: string // 담당 치료사
+  icfAssessments: IcfAssessment[]
+  generatedAt: string
+  authorName?: string
 }
 
 const METHOD_LABELS: Record<string, string> = {
@@ -45,6 +47,7 @@ export function SummaryPrintTemplate({
   patient,
   treatments,
   evaluations,
+  icfAssessments,
   generatedAt,
   authorName,
 }: Props) {
@@ -96,6 +99,13 @@ export function SummaryPrintTemplate({
   if (latestTreatment?.homework) {
     homeProgram.push(latestTreatment.homework)
   }
+
+  // 치료 목표 — 목표가 있는 가장 최근 ICF 평가에서 가져옴
+  const latestIcfWithGoals = icfAssessments.find(
+    (a) => (a.shortTermGoals?.length ?? 0) > 0 || (a.longTermGoals?.length ?? 0) > 0,
+  )
+  const shortTermGoals = latestIcfWithGoals?.shortTermGoals?.filter(Boolean) ?? []
+  const longTermGoals = latestIcfWithGoals?.longTermGoals?.filter(Boolean) ?? []
 
   const startDate = patient.treatmentStartDate
   const lastDate = treatments[0]?.date
@@ -197,6 +207,27 @@ export function SummaryPrintTemplate({
               <li key={i}>{item}</li>
             ))}
           </ol>
+        </section>
+      )}
+
+      {/* 치료 목표 */}
+      {(shortTermGoals.length > 0 || longTermGoals.length > 0) && (
+        <section className="avoid-break mb-5">
+          <h3 className="mb-2 text-sm font-bold text-slate-800">🎯 치료 목표</h3>
+          {shortTermGoals.length > 0 && (
+            <div className="mb-2">
+              <p className="mb-1 text-xs font-semibold text-slate-500">단기 목표 (4주)</p>
+              <ol className="ml-5 list-decimal space-y-1 text-sm text-slate-700">
+                {shortTermGoals.map((g, i) => <li key={i}>{g}</li>)}
+              </ol>
+            </div>
+          )}
+          {longTermGoals.length > 0 && (
+            <div>
+              <p className="mb-1 text-xs font-semibold text-slate-500">장기 목표 (8주)</p>
+              <p className="text-sm text-slate-700">{longTermGoals[0]}</p>
+            </div>
+          )}
         </section>
       )}
 

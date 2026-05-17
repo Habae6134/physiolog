@@ -62,6 +62,7 @@ export default async function PrintPage({ params, searchParams }: PageProps) {
           patient={patient}
           treatments={treatments}
           evaluations={evaluations}
+          icfAssessments={icfAssessments}
           generatedAt={generatedAt}
           authorName={authorName}
         />
