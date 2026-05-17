@@ -17,7 +17,6 @@ import { getMovementById } from '@/data/joints'
 import { MMT_GRADE_LABELS } from '@/data/evaluation-options'
 import { formatDate } from '@/lib/utils/date'
 import { BodyMap } from './BodyMap'
-import { TreatmentGoals } from './TreatmentGoals'
 import type { Evaluation } from '@/features/evaluations/domain/types'
 
 type Props = {
@@ -216,16 +215,6 @@ export function EvaluationDetailSheet({
                   </Section>
                 </>
               )}
-
-              <Separator />
-              <Section title="치료 목표">
-                <TreatmentGoals
-                  evaluationId={evaluation.id}
-                  patientId={evaluation.patientId}
-                  initialShortTermGoals={evaluation.shortTermGoals}
-                  initialLongTermGoals={evaluation.longTermGoals}
-                />
-              </Section>
 
               {onDelete && (
                 <>

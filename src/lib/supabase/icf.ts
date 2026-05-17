@@ -11,6 +11,8 @@ type IcfRow = {
   turns: IcfTurn[] | null
   final_domains: IcfDomains | null
   final_note: string | null
+  short_term_goals: string[] | null
+  long_term_goals: string[] | null
   created_at: string
 }
 
@@ -38,7 +40,7 @@ export async function createIcfAssessment(
   input: Omit<IcfAssessment, 'id' | 'patientId' | 'createdAt'>
 ): Promise<{ success: boolean; data?: IcfAssessment; error?: string }> {
   const supabase = await createClient()
-  
+
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { success: false, error: '로그인이 필요합니다.' }
 
@@ -51,6 +53,8 @@ export async function createIcfAssessment(
       turns: input.turns,
       final_domains: input.finalDomains,
       final_note: input.finalNote,
+      short_term_goals: input.shortTermGoals ?? [],
+      long_term_goals: input.longTermGoals ?? [],
     })
     .select()
     .single()
@@ -75,6 +79,8 @@ export async function updateIcfAssessment(
     turns?: IcfTurn[]
     finalDomains?: IcfDomains
     finalNote?: string
+    shortTermGoals?: string[]
+    longTermGoals?: string[]
   }
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient()
@@ -84,6 +90,8 @@ export async function updateIcfAssessment(
   if ('turns' in updates) dbUpdates.turns = updates.turns
   if ('finalDomains' in updates) dbUpdates.final_domains = updates.finalDomains
   if ('finalNote' in updates) dbUpdates.final_note = updates.finalNote
+  if ('shortTermGoals' in updates) dbUpdates.short_term_goals = updates.shortTermGoals
+  if ('longTermGoals' in updates) dbUpdates.long_term_goals = updates.longTermGoals
 
   const { error } = await supabase
     .from('icf_assessments')
@@ -130,6 +138,8 @@ function dbToIcf(dbRecord: IcfRow): IcfAssessment {
     turns: dbRecord.turns ?? [],
     finalDomains: dbRecord.final_domains ?? { body: [], activity: [], participation: [], environment: [], personal: [] },
     finalNote: dbRecord.final_note ?? '',
+    shortTermGoals: dbRecord.short_term_goals ?? [],
+    longTermGoals: dbRecord.long_term_goals ?? [],
     createdAt: dbRecord.created_at,
   }
 }

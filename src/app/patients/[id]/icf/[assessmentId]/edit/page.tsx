@@ -22,9 +22,11 @@ export default function IcfEditPage({ params }: PageProps) {
 
   const [assessment, setAssessment] = useState<IcfAssessment | null | undefined>(undefined)
   const [date, setDate] = useState('')
-  const [userInput, setUserInput] = useState('')      // 평가 내용 (AI에 입력했던 텍스트)
+  const [userInput, setUserInput] = useState('')
   const [domains, setDomains] = useState<IcfDomains>({ body: [], activity: [], participation: [], environment: [], personal: [] })
   const [finalNote, setFinalNote] = useState('')
+  const [shortTermGoals, setShortTermGoals] = useState<string[]>(['', '', ''])
+  const [longTermGoals, setLongTermGoals] = useState<string[]>([''])
   const [newItems, setNewItems] = useState<Record<string, string>>({})
   const [isSaving, setIsSaving] = useState(false)
 
@@ -38,6 +40,9 @@ export default function IcfEditPage({ params }: PageProps) {
         setUserInput(found.turns.map((t) => t.input).join('\n\n'))
         setDomains(structuredClone(found.finalDomains))
         setFinalNote(found.finalNote ?? '')
+        const st = found.shortTermGoals ?? []
+        setShortTermGoals([st[0] ?? '', st[1] ?? '', st[2] ?? ''])
+        setLongTermGoals([found.longTermGoals?.[0] ?? ''])
       }
     }
     load()
@@ -74,6 +79,8 @@ export default function IcfEditPage({ params }: PageProps) {
       turns: updatedTurns,
       finalDomains: domains,
       finalNote,
+      shortTermGoals: shortTermGoals.filter((g) => g.trim()),
+      longTermGoals: longTermGoals.filter((g) => g.trim()),
     })
 
     setIsSaving(false)
@@ -210,6 +217,48 @@ export default function IcfEditPage({ params }: PageProps) {
           placeholder="임상 추론 요약을 입력하세요"
           className="text-sm"
         />
+      </section>
+
+      <Separator />
+
+      {/* 치료 목표 */}
+      <section className="flex flex-col gap-4">
+        <Label className="text-sm font-semibold">치료 목표</Label>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-primary">단기 목표</span>
+            <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">4주</span>
+          </div>
+          {shortTermGoals.map((goal, idx) => (
+            <div key={idx} className="flex items-start gap-2">
+              <span className="mt-2.5 text-[10px] font-bold text-muted-foreground w-4 shrink-0">{idx + 1}</span>
+              <Textarea
+                rows={2}
+                value={goal}
+                onChange={(e) => {
+                  const next = [...shortTermGoals]
+                  next[idx] = e.target.value
+                  setShortTermGoals(next)
+                }}
+                placeholder={`단기 목표 ${idx + 1}`}
+                className="text-sm resize-none"
+              />
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-foreground">장기 목표</span>
+            <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">8주</span>
+          </div>
+          <Textarea
+            rows={2}
+            value={longTermGoals[0] ?? ''}
+            onChange={(e) => setLongTermGoals([e.target.value])}
+            placeholder="장기 목표"
+            className="text-sm resize-none"
+          />
+        </div>
       </section>
 
       {/* 저장 버튼 */}

@@ -196,6 +196,34 @@ export function IcfTab({ patientId, initialAssessments }: Props) {
                 </div>
               )}
 
+              {(a.shortTermGoals.length > 0 || a.longTermGoals.length > 0) && (
+                <div className="rounded-lg border p-3 flex flex-col gap-2">
+                  <p className="text-xs font-semibold">치료 목표</p>
+                  {a.shortTermGoals.length > 0 && (
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-medium text-primary">단기</span>
+                        <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">4주</span>
+                      </div>
+                      <ol className="list-decimal list-inside flex flex-col gap-0.5">
+                        {a.shortTermGoals.map((g, i) => (
+                          <li key={i} className="text-sm text-muted-foreground leading-relaxed">{g}</li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+                  {a.longTermGoals.length > 0 && (
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-medium text-foreground">장기</span>
+                        <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">8주</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{a.longTermGoals[0]}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="flex gap-2">
                 <Button asChild variant="outline" size="sm" className="flex-1 gap-1.5">
                   <Link href={`/patients/${patientId}/icf/${a.id}/edit`}>

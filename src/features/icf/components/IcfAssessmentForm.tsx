@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Loader2, Sparkles, MessageSquare, Save, RefreshCw, Info, AlertTriangle } from 'lucide-react'
+import { Loader2, Sparkles, MessageSquare, Save, RefreshCw, Info, AlertTriangle, Target } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -60,6 +60,9 @@ export function IcfAssessmentForm({ patientId }: Props) {
   const [currentResult, setCurrentResult] = useState<IcfAnalysisResult | null>(null)
   const [patient, setPatient] = useState<Patient | null>(null)
   const [evaluations, setEvaluations] = useState<Evaluation[]>([])
+  const [shortTermGoals, setShortTermGoals] = useState<string[]>(['', '', ''])
+  const [longTermGoals, setLongTermGoals] = useState<string[]>([''])
+  const [isGoalsGenerating, setIsGoalsGenerating] = useState(false)
   useEffect(() => {
     async function loadData() {
       const p = await getPatient(patientId)
@@ -125,12 +128,16 @@ export function IcfAssessmentForm({ patientId }: Props) {
     if (turns.length === 0) return
     const merged = mergeDomains(turns)
     const lastNote = currentResult?.clinicalNote ?? ''
-    
+    const filteredShort = shortTermGoals.filter((g) => g.trim())
+    const filteredLong = longTermGoals.filter((g) => g.trim())
+
     const result = await createIcfAssessment(patientId, {
       date: new Date().toISOString().slice(0, 10),
       turns,
       finalDomains: merged,
       finalNote: lastNote,
+      shortTermGoals: filteredShort,
+      longTermGoals: filteredLong,
     })
 
     if (result.success) {
@@ -148,6 +155,33 @@ export function IcfAssessmentForm({ patientId }: Props) {
     setTurns([])
     setHistory([])
     setCurrentResult(null)
+    setShortTermGoals(['', '', ''])
+    setLongTermGoals([''])
+  }
+
+  async function handleGenerateGoals() {
+    setIsGoalsGenerating(true)
+    try {
+      const res = await fetch('/api/goals/recommend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ patientId }),
+      })
+      const data = await res.json() as { shortTermGoals?: string[]; longTermGoals?: string[]; error?: string }
+      if (!res.ok || data.error) {
+        toast.error(data.error ?? 'AI 추천 실패')
+        return
+      }
+      const st = data.shortTermGoals ?? []
+      const lt = data.longTermGoals ?? []
+      setShortTermGoals([st[0] ?? '', st[1] ?? '', st[2] ?? ''])
+      setLongTermGoals([lt[0] ?? ''])
+      toast.success('AI 목표 추천 완료')
+    } catch {
+      toast.error('네트워크 오류가 발생했습니다.')
+    } finally {
+      setIsGoalsGenerating(false)
+    }
   }
 
   const addTag = (tag: string) => {
@@ -354,11 +388,78 @@ export function IcfAssessmentForm({ patientId }: Props) {
               </motion.section>
             )}
 
+            {/* 치료 목표 */}
+            <motion.section
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="flex flex-col gap-3 rounded-lg border p-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Target className="h-4 w-4 text-primary" />
+                  <p className="text-sm font-semibold">치료 목표</p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGenerateGoals}
+                  disabled={isGoalsGenerating}
+                  className="gap-1.5 text-xs h-8"
+                >
+                  {isGoalsGenerating ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5 text-primary" />
+                  )}
+                  {isGoalsGenerating ? 'AI 분석 중...' : 'AI 추천 받기'}
+                </Button>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-primary">단기 목표</span>
+                  <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">4주</span>
+                </div>
+                {shortTermGoals.map((goal, idx) => (
+                  <div key={idx} className="flex items-start gap-2">
+                    <span className="mt-2.5 text-[10px] font-bold text-muted-foreground w-4 shrink-0">{idx + 1}</span>
+                    <Textarea
+                      rows={2}
+                      value={goal}
+                      onChange={(e) => {
+                        const next = [...shortTermGoals]
+                        next[idx] = e.target.value
+                        setShortTermGoals(next)
+                      }}
+                      placeholder={`단기 목표 ${idx + 1}`}
+                      className="text-sm resize-none"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-foreground">장기 목표</span>
+                  <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">8주</span>
+                </div>
+                <Textarea
+                  rows={2}
+                  value={longTermGoals[0] ?? ''}
+                  onChange={(e) => setLongTermGoals([e.target.value])}
+                  placeholder="장기 목표"
+                  className="text-sm resize-none"
+                />
+              </div>
+            </motion.section>
+
             {/* 액션 버튼 */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.7 }}
+              transition={{ delay: 0.8 }}
               className="flex gap-2"
             >
               <Button variant="outline" size="sm" onClick={handleReset} className="gap-1.5">

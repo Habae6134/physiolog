@@ -35,6 +35,8 @@ export interface IcfAssessment {
   turns: IcfTurn[]
   finalDomains: IcfDomains
   finalNote: string
+  shortTermGoals: string[]
+  longTermGoals: string[]
 }
 
 export type IcfDomainKey = keyof IcfDomains
