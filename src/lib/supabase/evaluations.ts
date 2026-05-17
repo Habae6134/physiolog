@@ -22,6 +22,8 @@ type EvaluationRow = {
   body_measurement: BodyMeasurement[] | null
   pain_mapping: PainArea[] | null
   custom: CustomEval[] | null
+  short_term_goals: string[] | null
+  long_term_goals: string[] | null
   created_at: string
 }
 
@@ -108,6 +110,8 @@ export async function updateEvaluation(id: string, patientId: string, updates: P
   if ('bodyMeasurement' in updates) dbUpdates.body_measurement = updates.bodyMeasurement ?? null
   if ('painMapping' in updates) dbUpdates.pain_mapping = updates.painMapping ?? null
   if ('custom' in updates) dbUpdates.custom = updates.custom ?? null
+  if ('shortTermGoals' in updates) dbUpdates.short_term_goals = updates.shortTermGoals ?? null
+  if ('longTermGoals' in updates) dbUpdates.long_term_goals = updates.longTermGoals ?? null
 
   const { data, error } = await supabase
     .from('evaluations')
@@ -159,6 +163,8 @@ function dbToEvaluation(dbRecord: EvaluationRow): Evaluation {
     bodyMeasurement: dbRecord.body_measurement ?? undefined,
     painMapping: dbRecord.pain_mapping ?? undefined,
     custom: dbRecord.custom ?? undefined,
+    shortTermGoals: dbRecord.short_term_goals ?? undefined,
+    longTermGoals: dbRecord.long_term_goals ?? undefined,
     createdAt: dbRecord.created_at,
   }
 }

@@ -50,6 +50,8 @@ export type Evaluation = {
   bodyMeasurement?: BodyMeasurement[]
   painMapping?: PainArea[]     // 바디 매핑 데이터
   custom?: CustomEval[]
+  shortTermGoals?: string[]    // 단기 목표 (4주), 3개
+  longTermGoals?: string[]     // 장기 목표 (8주), 1개
   createdAt: string
 }
 
