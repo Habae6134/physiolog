@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { buildPatientContext } from '@/features/icf/domain/patient-context'
 
+export const maxDuration = 60
+
 const MODEL_ID = 'claude-sonnet-4-6'
 
 const SYSTEM_PROMPT = `당신은 물리치료사를 위한 임상 목표 설정 보조 AI입니다.

@@ -11,6 +11,8 @@ import type { IcfAssessment } from '@/features/icf/domain/types'
 // 인증된(로그인) 사용자만 호출 가능 — 세션 체크 필수
 // 환자 컨텍스트(기본정보 + 최근 평가 + 최근 치료)는 서버에서 fetch해서 system prompt에 자동 주입
 
+export const maxDuration = 60
+
 interface ApiMessage {
   role: 'user' | 'assistant'
   content: string
