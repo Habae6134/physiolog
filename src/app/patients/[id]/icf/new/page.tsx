@@ -23,6 +23,7 @@ export default function IcfNewPage({ params }: PageProps) {
   const [assessments, setAssessments] = useState<IcfAssessment[]>([])
   const [sheetOpen, setSheetOpen] = useState(false)
   const [initialInput, setInitialInput] = useState<string | undefined>(undefined)
+  const [previousAssessment, setPreviousAssessment] = useState<IcfAssessment | undefined>(undefined)
   const [formKey, setFormKey] = useState(0)
 
   useEffect(() => {
@@ -32,6 +33,7 @@ export default function IcfNewPage({ params }: PageProps) {
   function handleSelectAssessment(a: IcfAssessment) {
     const text = a.turns.map((t) => t.input).join('\n\n')
     setInitialInput(text)
+    setPreviousAssessment(a)
     setFormKey((k) => k + 1)
     setSheetOpen(false)
   }
@@ -64,7 +66,7 @@ export default function IcfNewPage({ params }: PageProps) {
         )}
       </header>
 
-      <IcfAssessmentForm key={formKey} patientId={id} initialInput={initialInput} />
+      <IcfAssessmentForm key={formKey} patientId={id} initialInput={initialInput} previousAssessment={previousAssessment} />
 
       {/* 이전 평가 선택 시트 */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>

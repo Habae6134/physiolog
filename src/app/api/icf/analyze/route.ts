@@ -4,6 +4,7 @@ import { ICF_SYSTEM_PROMPT } from '@/data/icf-system-prompt'
 import { createClient } from '@/lib/supabase/server'
 import { buildPatientContext } from '@/features/icf/domain/patient-context'
 import { icfAnalysisResultSchema } from '@/features/icf/domain/schema'
+import type { IcfAssessment } from '@/features/icf/domain/types'
 
 // 시스템 프롬프트는 서버 코드에 고정 — 사용자 입력으로 절대 변경 불가
 // API 키는 서버 환경변수(ANTHROPIC_API_KEY)에서만 읽어옴 — 클라이언트 BYOK 미지원
@@ -16,7 +17,48 @@ interface ApiMessage {
 }
 
 const MODEL_ID = 'claude-sonnet-4-6'
-const MAX_RETRY = 1 // 응답 형식 오류 시 1회 재시도
+const MAX_RETRY = 1
+
+const DOMAIN_LABELS: Record<string, string> = {
+  body: '신체기능', activity: '활동', participation: '참여', environment: '환경', personal: '개인',
+}
+
+function buildPreviousAssessmentContext(prev: IcfAssessment): string {
+  const domainLines = (['body', 'activity', 'participation', 'environment', 'personal'] as const)
+    .map((k) => {
+      const items = prev.finalDomains[k]
+      return items.length > 0 ? `- ${DOMAIN_LABELS[k]}: ${items.join('; ')}` : null
+    })
+    .filter(Boolean)
+    .join('\n')
+
+  const goalLines = [
+    ...prev.shortTermGoals.map((g, i) => {
+      const status = prev.shortTermGoalStatuses?.[i] === 'achieved' ? '✅ 달성됨' : '⏳ 진행중'
+      return `  - [단기] ${g} (${status})`
+    }),
+    ...prev.longTermGoals.map((g, i) => {
+      const status = prev.longTermGoalStatuses?.[i] === 'achieved' ? '✅ 달성됨' : '⏳ 진행중'
+      return `  - [장기] ${g} (${status})`
+    }),
+  ].join('\n')
+
+  return `## 재평가 모드 — 이전 ICF 평가 참조 (${prev.date})
+
+아래는 이전 평가 결과입니다. 이를 반드시 참조하여:
+1. 이전 평가 대비 개선·악화·변화된 항목을 파악하고 \`clinicalNote\`에 명시하세요.
+2. 이전에 파악된 문제가 현재도 지속되는지 업데이트하세요.
+3. 목표 달성 여부를 고려해 \`followUpQuestion\`에 새로운 방향을 제안하세요.
+4. 이미 달성된 목표 관련 영역은 현재 기능 수준으로 업데이트하고, 미달성 영역은 원인 분석을 심화하세요.
+
+### 이전 ICF 분류 결과
+${domainLines || '(분류 항목 없음)'}
+
+### 이전 임상 추론 요약
+${prev.finalNote || '(없음)'}
+
+${goalLines ? `### 치료 목표 달성 현황\n${goalLines}` : ''}`
+}
 
 /**
  * Claude 응답 텍스트에서 첫 번째 JSON 객체만 추출.
@@ -105,21 +147,31 @@ export async function POST(req: NextRequest) {
   }
 
   // 3. 입력 검증
-  const body = await req.json() as { input: string; history?: ApiMessage[]; patientId?: string }
-  const { input, history = [], patientId } = body
+  const body = await req.json() as {
+    input: string
+    history?: ApiMessage[]
+    patientId?: string
+    previousAssessment?: IcfAssessment
+  }
+  const { input, history = [], patientId, previousAssessment } = body
   if (!input?.trim()) {
     return NextResponse.json({ error: '입력값이 없습니다.' }, { status: 400 })
   }
 
-  // 4. 환자 컨텍스트 주입 (실패해도 분석 자체는 진행)
+  // 4. 환자 컨텍스트 + 재평가 컨텍스트 주입 (실패해도 분석 진행)
   let systemPrompt = ICF_SYSTEM_PROMPT
-  if (patientId) {
-    try {
+  try {
+    const parts: string[] = [ICF_SYSTEM_PROMPT]
+    if (patientId) {
       const ctx = await buildPatientContext(patientId)
-      if (ctx) systemPrompt = `${ICF_SYSTEM_PROMPT}\n\n${ctx}`
-    } catch (err) {
-      console.error('Failed to build patient context, falling back to base prompt:', err)
+      if (ctx) parts.push(ctx)
     }
+    if (previousAssessment) {
+      parts.push(buildPreviousAssessmentContext(previousAssessment))
+    }
+    systemPrompt = parts.join('\n\n')
+  } catch (err) {
+    console.error('Failed to build context, falling back to base prompt:', err)
   }
 
   const client = new Anthropic({ apiKey })

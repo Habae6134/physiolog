@@ -12,7 +12,7 @@ import { IcfDomainCard } from './IcfDomainCard'
 import { createIcfAssessment } from '@/lib/supabase/icf'
 import { getPatient } from '@/lib/supabase/patients'
 import { getEvaluations } from '@/lib/supabase/evaluations'
-import { mergeDomains, mergeRedFlags, DOMAIN_KEYS, type IcfTurn, type IcfAnalysisResult, type GoalStatus } from '@/features/icf/domain/types'
+import { mergeDomains, mergeRedFlags, DOMAIN_KEYS, DOMAIN_META, type IcfTurn, type IcfAnalysisResult, type GoalStatus, type IcfAssessment } from '@/features/icf/domain/types'
 import type { Patient } from '@/features/patients/domain/types'
 import type { Evaluation } from '@/features/evaluations/domain/types'
 
@@ -24,6 +24,7 @@ interface ApiMessage {
 interface Props {
   patientId: string
   initialInput?: string
+  previousAssessment?: IcfAssessment
 }
 
 const TAG_CATEGORIES = [
@@ -51,7 +52,7 @@ const TAG_CATEGORIES = [
 
 type Status = 'idle' | 'loading' | 'result'
 
-export function IcfAssessmentForm({ patientId, initialInput }: Props) {
+export function IcfAssessmentForm({ patientId, initialInput, previousAssessment }: Props) {
   const router = useRouter()
   const [status, setStatus] = useState<Status>('idle')
   const [input, setInput] = useState(initialInput ?? '')
@@ -90,7 +91,7 @@ export function IcfAssessmentForm({ patientId, initialInput }: Props) {
     const res = await fetch('/api/icf/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ input: userInput, history, patientId }),
+      body: JSON.stringify({ input: userInput, history, patientId, previousAssessment }),
     })
 
     let data: { result?: IcfAnalysisResult; error?: string; assistantMessage?: string }
@@ -206,11 +207,28 @@ export function IcfAssessmentForm({ patientId, initialInput }: Props) {
           className="flex flex-col gap-3"
         >
           <div className="flex flex-col gap-1">
-            <h2 className="text-sm font-semibold">초기 상담 내용 입력</h2>
+            <h2 className="text-sm font-semibold">
+              {previousAssessment ? '재평가 내용 입력' : '초기 상담 내용 입력'}
+            </h2>
             <p className="text-xs text-muted-foreground">
-              환자와의 초기 상담, 임상 관찰, 수행 관찰 내용을 자유롭게 적어주세요. AI가 5개 영역으로 분류합니다.
+              {previousAssessment
+                ? '현재 시점의 변화·추가 관찰 내용을 입력하세요. AI가 이전 평가와 비교해 재분류합니다.'
+                : '환자와의 초기 상담, 임상 관찰, 수행 관찰 내용을 자유롭게 적어주세요. AI가 5개 영역으로 분류합니다.'}
             </p>
           </div>
+
+          {previousAssessment && (
+            <div className="rounded-md border border-blue-200 bg-blue-50/60 px-3 py-2 text-xs text-blue-800 flex flex-col gap-1">
+              <p className="font-semibold">이전 평가 참조 중 ({previousAssessment.date})</p>
+              <div className="flex flex-wrap gap-1">
+                {DOMAIN_KEYS.filter((k) => previousAssessment.finalDomains[k].length > 0).map((k) => (
+                  <span key={k} className={`px-1.5 py-0.5 rounded-full border text-[10px] font-medium ${DOMAIN_META[k].bg} ${DOMAIN_META[k].border} ${DOMAIN_META[k].color}`}>
+                    {DOMAIN_META[k].label} {previousAssessment.finalDomains[k].length}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="flex items-start gap-2 rounded-md border border-blue-100 bg-blue-50/60 px-3 py-2 text-xs text-blue-800">
             <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-500" />
