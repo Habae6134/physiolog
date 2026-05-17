@@ -35,7 +35,7 @@ const EMPTY_DEFAULTS: EvaluationFormValues = {
   mmt: [],
   toggleMeasurement: false,
   measurement: [],
-  togglePainMapping: true,
+  togglePainMapping: false,
   painMapping: [],
   toggleCustom: false,
   custom: [],

@@ -54,7 +54,15 @@ export function ROMInput() {
                     }
                   >
                     <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="관절·동작 선택" />
+                      {jointId ? (() => {
+                        const mv = getMovementById(jointId)
+                        return mv ? (
+                          <span className="text-sm text-left">
+                            <span className="text-muted-foreground">{mv.joint.label} — </span>
+                            {mv.movement.label}
+                          </span>
+                        ) : <SelectValue placeholder="관절·동작 선택" />
+                      })() : <SelectValue placeholder="관절·동작 선택" />}
                     </SelectTrigger>
                     <SelectContent>
                       {JOINTS.map((joint) => (
