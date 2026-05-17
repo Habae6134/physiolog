@@ -12,6 +12,7 @@ create table public.patients (
   other_medical_history text,
   diagnosis text,
   surgery_history text,
+  onset_date date,
   insurance text,
   notes text,
   treatment_start_date date,
