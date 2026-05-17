@@ -80,15 +80,17 @@ export function SummaryPrintTemplate({
   // 최근 치료의 운동·숙제 정보 (홈 프로그램용)
   const latestTreatment = treatments[0]
   const homeProgram: string[] = []
-  if (latestTreatment?.exercises) {
-    for (const ex of latestTreatment.exercises) {
-      if (!ex.name) continue
-      const parts: string[] = []
-      if (ex.sets) parts.push(`${ex.sets}세트`)
-      if (ex.reps) parts.push(`${ex.reps}회`)
-      if (ex.weight) parts.push(`${ex.weight}kg`)
-      if (ex.duration) parts.push(`${ex.duration}분`)
-      homeProgram.push(parts.length > 0 ? `${ex.name} — ${parts.join(', ')}` : ex.name)
+  if (latestTreatment?.exerciseGroups) {
+    for (const group of latestTreatment.exerciseGroups) {
+      for (const ex of group.exercises) {
+        if (!ex.name) continue
+        const parts: string[] = []
+        if (ex.sets) parts.push(`${ex.sets}세트`)
+        if (ex.reps) parts.push(`${ex.reps}회`)
+        if (ex.weight) parts.push(`${ex.weight}kg`)
+        if (ex.duration) parts.push(`${ex.duration}분`)
+        homeProgram.push(parts.length > 0 ? `${ex.name} — ${parts.join(', ')}` : ex.name)
+      }
     }
   }
   if (latestTreatment?.homework) {

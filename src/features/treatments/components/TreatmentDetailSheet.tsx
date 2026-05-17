@@ -109,25 +109,34 @@ export function TreatmentDetailSheet({ treatment, onOpenChange, onDelete }: Prop
               )}
 
               {/* 운동 치료 상세 */}
-              {treatment.exerciseConcept && (
-                <Section title={`운동 치료 (${EXERCISE_CONCEPT_LABEL[treatment.exerciseConcept]})`}>
-                  <div className="mt-2 space-y-3">
-                    {treatment.exercises?.map((e, idx) => (
-                      <div key={e.id ?? idx} className="rounded-xl border bg-card p-4 shadow-sm">
-                        <div className="flex items-center justify-between border-b pb-2 mb-2">
-                          <span className="font-bold text-sm text-primary">{idx + 1}. {e.name}</span>
-                          <div className="flex flex-wrap gap-3 text-xs font-black text-slate-900">
-                            {e.sets ? <span>{e.sets} SET</span> : null}
-                            {e.reps ? <span>{e.reps} REP</span> : null}
-                            {e.weight ? <span>{e.weight} kg</span> : null}
-                            {e.duration ? <span>{e.duration} 분</span> : null}
-                          </div>
+              {treatment.exerciseGroups && treatment.exerciseGroups.length > 0 && (
+                <Section title="운동 치료">
+                  <div className="mt-2 flex flex-col gap-5">
+                    {treatment.exerciseGroups.map((group) => (
+                      <div key={group.concept}>
+                        <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-2">
+                          {EXERCISE_CONCEPT_LABEL[group.concept]}
+                        </p>
+                        <div className="space-y-3">
+                          {group.exercises.map((e, idx) => (
+                            <div key={e.id ?? idx} className="rounded-xl border bg-card p-4 shadow-sm">
+                              <div className="flex items-center justify-between border-b pb-2 mb-2">
+                                <span className="font-bold text-sm text-primary">{idx + 1}. {e.name}</span>
+                                <div className="flex flex-wrap gap-3 text-xs font-black text-slate-900">
+                                  {e.sets ? <span>{e.sets} SET</span> : null}
+                                  {e.reps ? <span>{e.reps} REP</span> : null}
+                                  {e.weight ? <span>{e.weight} kg</span> : null}
+                                  {e.duration ? <span>{e.duration} 분</span> : null}
+                                </div>
+                              </div>
+                              {e.intensity && (
+                                <p className="text-sm text-muted-foreground leading-relaxed italic">
+                                  &quot;{e.intensity}&quot;
+                                </p>
+                              )}
+                            </div>
+                          ))}
                         </div>
-                        {e.intensity && (
-                          <p className="text-sm text-muted-foreground leading-relaxed italic">
-                            &quot;{e.intensity}&quot;
-                          </p>
-                        )}
                       </div>
                     ))}
                   </div>

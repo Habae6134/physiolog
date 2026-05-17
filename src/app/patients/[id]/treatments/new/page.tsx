@@ -52,11 +52,13 @@ export default function NewTreatmentPage({ params }: PageProps) {
           })),
           methods: sourceRecord.methods,
           otherTreatmentMethod: sourceRecord.otherTreatmentMethod,
-          exerciseConcept: sourceRecord.exerciseConcept,
-          exercises: (sourceRecord.exercises ?? []).map((e) => ({
-            id: e.id,
-            name: e.name,
-            intensity: e.intensity ?? '',
+          exerciseGroups: (sourceRecord.exerciseGroups ?? []).map((g) => ({
+            concept: g.concept,
+            exercises: g.exercises.map((e) => ({
+              id: e.id,
+              name: e.name,
+              intensity: e.intensity ?? '',
+            })),
           })),
           homework: sourceRecord.homework ?? '',
           comment: sourceRecord.comment ?? '',
@@ -75,19 +77,18 @@ export default function NewTreatmentPage({ params }: PageProps) {
       methods: values.methods,
       otherTreatmentMethod: values.otherTreatmentMethod,
       methodDetails: values.methodDetails,
-      exerciseConcept: values.exerciseConcept,
-      exercises: values.exercises,
+      exerciseGroups: values.exerciseGroups,
       homework: values.homework,
       comment: values.comment,
       flags: values.flags,
     })
-    
+
     if (!result.success) {
       toast.error('치료 기록 저장 실패', { description: result.error })
       return
     }
     // 운동 즐겨찾기 빈도 업데이트
-    values.exercises.forEach((e) => exerciseFavoritesStore.recordExerciseUsage(e.name))
+    values.exerciseGroups.flatMap((g) => g.exercises).forEach((e) => exerciseFavoritesStore.recordExerciseUsage(e.name))
     toast.success(copyMode ? '복사 저장 완료' : '치료 저장됨')
     router.replace(`/patients/${patientId}?tab=treatments`)
     // 페이지 unmount까지 isSubmitting 유지 — 버튼 깜빡임 방지

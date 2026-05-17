@@ -161,11 +161,11 @@ export async function buildPatientContext(patientId: string): Promise<string> {
     if (latestTreatment.otherTreatmentMethod) {
       lines.push(`- 기타 치료: ${latestTreatment.otherTreatmentMethod}`)
     }
-    if (latestTreatment.exerciseConcept) {
-      lines.push(`- 운동 컨셉: ${CONCEPT_LABELS[latestTreatment.exerciseConcept] ?? latestTreatment.exerciseConcept}`)
-    }
-    if (latestTreatment.exercises && latestTreatment.exercises.length > 0) {
-      const names = latestTreatment.exercises
+    if (latestTreatment.exerciseGroups && latestTreatment.exerciseGroups.length > 0) {
+      const concepts = latestTreatment.exerciseGroups.map((g) => CONCEPT_LABELS[g.concept] ?? g.concept)
+      lines.push(`- 운동 컨셉: ${concepts.join(', ')}`)
+      const names = latestTreatment.exerciseGroups
+        .flatMap((g) => g.exercises)
         .slice(0, 5)
         .map((e) => e.name)
         .filter(Boolean)

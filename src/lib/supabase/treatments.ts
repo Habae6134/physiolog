@@ -9,6 +9,7 @@ import type {
   TreatmentMethod,
   ExerciseConcept,
   Exercise,
+  ExerciseGroup,
 } from '@/features/treatments/domain/types'
 
 type TreatmentRow = {
@@ -19,8 +20,8 @@ type TreatmentRow = {
   methods: TreatmentMethod[] | null
   other_treatment_method: string | null
   method_details: Partial<Record<TreatmentMethod, string>> | null
-  exercise_concept: ExerciseConcept | null
-  exercises: Exercise[] | null
+  exercise_concept: ExerciseConcept | null  // legacy — 이전 데이터 호환용
+  exercises: unknown                         // ExerciseGroup[] (신규) | Exercise[] (구버전)
   homework: string | null
   comment: string | null
   flags: string[] | null
@@ -80,8 +81,8 @@ export async function createTreatment(input: TreatmentInput): Promise<{ success:
       methods: input.methods,
       other_treatment_method: input.otherTreatmentMethod,
       method_details: input.methodDetails ?? {},
-      exercise_concept: input.exerciseConcept,
-      exercises: input.exercises,
+      exercise_concept: null,
+      exercises: input.exerciseGroups ?? [],
       homework: input.homework,
       comment: input.comment,
       flags: input.flags,
@@ -111,8 +112,10 @@ export async function updateTreatment(id: string, patientId: string, updates: Pa
   if ('methods' in updates) dbUpdates.methods = updates.methods ?? null
   if ('otherTreatmentMethod' in updates) dbUpdates.other_treatment_method = updates.otherTreatmentMethod ?? null
   if ('methodDetails' in updates) dbUpdates.method_details = updates.methodDetails ?? {}
-  if ('exerciseConcept' in updates) dbUpdates.exercise_concept = updates.exerciseConcept ?? null
-  if ('exercises' in updates) dbUpdates.exercises = updates.exercises ?? null
+  if ('exerciseGroups' in updates) {
+    dbUpdates.exercises = updates.exerciseGroups ?? []
+    dbUpdates.exercise_concept = null
+  }
   if ('homework' in updates) dbUpdates.homework = updates.homework ?? null
   if ('comment' in updates) dbUpdates.comment = updates.comment ?? null
   if ('flags' in updates) dbUpdates.flags = updates.flags ?? null
@@ -226,6 +229,25 @@ export async function getLatestTreatmentDateMap(
   return result
 }
 
+function normalizeExerciseGroups(
+  rawExercises: unknown,
+  oldConcept: ExerciseConcept | null,
+): ExerciseGroup[] {
+  const arr = Array.isArray(rawExercises) ? rawExercises : []
+  if (arr.length === 0) {
+    return oldConcept ? [{ concept: oldConcept, exercises: [] }] : []
+  }
+  const first = arr[0]
+  if (first && typeof first === 'object' && 'concept' in first && 'exercises' in first) {
+    return arr as ExerciseGroup[]
+  }
+  // 구버전: 단일 목적 + flat exercises
+  if (oldConcept) {
+    return [{ concept: oldConcept, exercises: arr as Exercise[] }]
+  }
+  return []
+}
+
 // DB snake_case -> 앱 camelCase 변환
 function dbToTreatment(dbRecord: TreatmentRow): Treatment {
   return {
@@ -236,8 +258,7 @@ function dbToTreatment(dbRecord: TreatmentRow): Treatment {
     methods: dbRecord.methods ?? [],
     otherTreatmentMethod: dbRecord.other_treatment_method ?? undefined,
     methodDetails: dbRecord.method_details ?? undefined,
-    exerciseConcept: dbRecord.exercise_concept ?? undefined,
-    exercises: dbRecord.exercises ?? [],
+    exerciseGroups: normalizeExerciseGroups(dbRecord.exercises, dbRecord.exercise_concept),
     homework: dbRecord.homework ?? undefined,
     comment: dbRecord.comment ?? undefined,
     flags: dbRecord.flags ?? [],

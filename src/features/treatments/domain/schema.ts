@@ -43,6 +43,11 @@ export const exerciseSchema = z.object({
   duration: z.coerce.number().min(0).optional(),  // 분 단위
 })
 
+export const exerciseGroupSchema = z.object({
+  concept: exerciseConceptEnum,
+  exercises: z.array(exerciseSchema),
+})
+
 export const bodyPartSchema = z.object({
   region: bodyRegionEnum,
   side: sideEnum,
@@ -61,26 +66,26 @@ export const treatmentFormSchema = z
     methodDetails: z
       .record(treatmentMethodEnum, z.string().trim().optional())
       .optional(),
-    exerciseConcept: exerciseConceptEnum.optional(),
-    exercises: z.array(exerciseSchema),
+    exerciseGroups: z.array(exerciseGroupSchema).default([]),
     homework: z.string().trim(),
     comment: z.string().trim(),
     flags: z.array(z.string()).default([]),
   })
   .refine(
     (data) =>
-      !data.methods.includes('exercise') || data.exerciseConcept !== undefined,
+      !data.methods.includes('exercise') || data.exerciseGroups.length > 0,
     {
-      message: '목적을 선택하세요',
-      path: ['exerciseConcept'],
+      message: '운동 목적을 1개 이상 선택하세요',
+      path: ['exerciseGroups'],
     },
   )
   .refine(
     (data) =>
-      !data.methods.includes('exercise') || data.exercises.length > 0,
+      !data.methods.includes('exercise') ||
+      data.exerciseGroups.every((g) => g.exercises.length > 0),
     {
-      message: '운동을 1개 이상 추가하세요',
-      path: ['exercises'],
+      message: '각 목적에 운동을 1개 이상 추가하세요',
+      path: ['exerciseGroups'],
     },
   )
 
