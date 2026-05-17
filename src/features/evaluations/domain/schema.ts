@@ -5,8 +5,8 @@ const sideEnum = z.enum(['left', 'right', 'both'])
 export const romRecordSchema = z.object({
   jointId: z.string().min(1),
   side: sideEnum,
-  active: z.number().optional(),
-  passive: z.number().optional(),
+  active: z.string().optional(),
+  passive: z.string().optional(),
 })
 
 export const mmtRecordSchema = z.object({

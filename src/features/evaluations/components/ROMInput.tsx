@@ -140,20 +140,20 @@ function DegreeInput({
   onChange,
 }: {
   label: string
-  value: number | undefined
-  onChange: (v: number | undefined) => void
+  value: string | undefined
+  onChange: (v: string | undefined) => void
 }) {
   return (
     <div className="flex items-center gap-2">
       <span className="w-10 text-xs text-muted-foreground">{label}</span>
       <Input
-        type="number"
-        inputMode="numeric"
+        type="text"
+        inputMode="decimal"
         placeholder="-"
         value={value ?? ''}
         onChange={(e) => {
           const v = e.target.value
-          onChange(v === '' ? undefined : Number(v))
+          onChange(v === '' ? undefined : v)
         }}
       />
       <span className="text-xs text-muted-foreground">°</span>

@@ -15,6 +15,7 @@ import { SIDE_LABEL } from '@/data/body-parts'
 import { formatDateShort } from '@/lib/utils/date'
 import type { Evaluation } from '@/features/evaluations/domain/types'
 import type { GraphMetric } from '@/features/evaluations/domain/types'
+import { parseRomNum } from '@/features/evaluations/lib/graph-options'
 
 type Props = {
   evaluations: Evaluation[]
@@ -117,11 +118,11 @@ function buildChart(
           r.jointId === metric.jointId &&
           (metric.side ? r.side === metric.side : true),
       )
-      const v = rec ? (metric.mode === 'active' ? rec.active : rec.passive) : undefined
+      const raw = rec ? (metric.mode === 'active' ? rec.active : rec.passive) : undefined
       return {
         date: e.date,
         label: formatDateShort(e.date),
-        value: typeof v === 'number' ? v : null,
+        value: parseRomNum(raw) ?? null,
       }
     })
     return {

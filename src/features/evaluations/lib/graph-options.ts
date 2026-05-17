@@ -35,11 +35,11 @@ export function extractGraphOptions(evaluations: Evaluation[]): GraphOption[] {
     })
   }
 
-  // ROM — (jointId, side, active|passive) 조합
+  // ROM — (jointId, side, active|passive) 조합. 숫자로 파싱 가능한 값만 그래프 후보
   for (const e of evaluations) {
     for (const r of e.rom ?? []) {
       const side = r.side ?? 'both'
-      if (typeof r.active === 'number') {
+      if (parseRomNum(r.active) !== undefined) {
         const mv = getMovementById(r.jointId)
         const label = `ROM ${side !== 'both' ? SIDE_LABEL[side] + ' ' : ''}${mv?.movement.label ?? r.jointId} (능동)`
         push({
@@ -48,7 +48,7 @@ export function extractGraphOptions(evaluations: Evaluation[]): GraphOption[] {
           label,
         })
       }
-      if (typeof r.passive === 'number') {
+      if (parseRomNum(r.passive) !== undefined) {
         const mv = getMovementById(r.jointId)
         const label = `ROM ${side !== 'both' ? SIDE_LABEL[side] + ' ' : ''}${mv?.movement.label ?? r.jointId} (수동)`
         push({
@@ -115,4 +115,10 @@ export function metricKey(m: GraphMetric): string {
     case 'custom':
       return `custom:${m.name}`
   }
+}
+
+export function parseRomNum(v: string | number | undefined): number | undefined {
+  if (v === undefined || v === '') return undefined
+  const n = typeof v === 'number' ? v : Number(v)
+  return isNaN(n) ? undefined : n
 }

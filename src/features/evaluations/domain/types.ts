@@ -3,8 +3,8 @@ import type { Side } from '@/features/treatments/domain/types'
 export type ROMRecord = {
   jointId: string              // joints.ts의 id 참조
   side?: Side
-  active?: number              // 능동 ROM (도)
-  passive?: number             // 수동 ROM (도)
+  active?: string              // 능동 ROM — 숫자("90") 또는 범위("0~180") 자유 입력
+  passive?: string             // 수동 ROM — 동일
 }
 
 export type MMTGrade = 0 | 1 | 2 | 3 | 4 | 5
