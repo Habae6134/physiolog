@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { IcfDomainCard } from './IcfDomainCard'
 import { getIcfAssessments, deleteIcfAssessment } from '@/lib/supabase/icf'
 import { useConfirm } from '@/components/confirm-dialog'
-import { DOMAIN_KEYS, DOMAIN_META, type IcfAssessment } from '@/features/icf/domain/types'
+import { DOMAIN_KEYS, DOMAIN_META, type IcfAssessment, type GoalStatus } from '@/features/icf/domain/types'
 import { cn } from '@/lib/utils'
 
 type Props = {
@@ -197,28 +197,38 @@ export function IcfTab({ patientId, initialAssessments }: Props) {
               )}
 
               {(a.shortTermGoals.length > 0 || a.longTermGoals.length > 0) && (
-                <div className="rounded-lg border p-3 flex flex-col gap-2">
+                <div className="rounded-lg border p-3 flex flex-col gap-3">
                   <p className="text-xs font-semibold">치료 목표</p>
                   {a.shortTermGoals.length > 0 && (
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-1.5">
                       <div className="flex items-center gap-1.5">
                         <span className="text-xs font-medium text-primary">단기</span>
                         <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">4주</span>
                       </div>
-                      <ol className="list-decimal list-inside flex flex-col gap-0.5">
-                        {a.shortTermGoals.map((g, i) => (
-                          <li key={i} className="text-sm text-muted-foreground leading-relaxed">{g}</li>
-                        ))}
-                      </ol>
+                      <div className="flex flex-col gap-1">
+                        {a.shortTermGoals.map((g, i) => {
+                          const st = a.shortTermGoalStatuses?.[i] ?? 'ongoing'
+                          return (
+                            <div key={i} className="flex items-start gap-2">
+                              <span className="mt-0.5 text-[10px] font-bold text-muted-foreground w-3 shrink-0">{i + 1}</span>
+                              <p className={`flex-1 text-sm leading-relaxed ${st === 'achieved' ? 'line-through text-muted-foreground/60' : 'text-muted-foreground'}`}>{g}</p>
+                              <GoalStatusBadge status={st} />
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
                   )}
                   {a.longTermGoals.length > 0 && (
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-1.5">
                       <div className="flex items-center gap-1.5">
                         <span className="text-xs font-medium text-foreground">장기</span>
                         <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">8주</span>
                       </div>
-                      <p className="text-sm text-muted-foreground leading-relaxed">{a.longTermGoals[0]}</p>
+                      <div className="flex items-start gap-2">
+                        <p className={`flex-1 text-sm leading-relaxed ${(a.longTermGoalStatuses?.[0] ?? 'ongoing') === 'achieved' ? 'line-through text-muted-foreground/60' : 'text-muted-foreground'}`}>{a.longTermGoals[0]}</p>
+                        <GoalStatusBadge status={a.longTermGoalStatuses?.[0] ?? 'ongoing'} />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -244,5 +254,20 @@ export function IcfTab({ patientId, initialAssessments }: Props) {
         </div>
       ))}
     </div>
+  )
+}
+
+function GoalStatusBadge({ status }: { status: GoalStatus }) {
+  if (status === 'achieved') {
+    return (
+      <span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium bg-emerald-50 border border-emerald-300 text-emerald-700">
+        달성됨
+      </span>
+    )
+  }
+  return (
+    <span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium bg-amber-50 border border-amber-300 text-amber-700">
+      진행중
+    </span>
   )
 }

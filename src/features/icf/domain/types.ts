@@ -27,6 +27,8 @@ export interface IcfTurn {
   result: IcfAnalysisResult
 }
 
+export type GoalStatus = 'ongoing' | 'achieved'
+
 export interface IcfAssessment {
   id: string
   patientId: string
@@ -37,6 +39,8 @@ export interface IcfAssessment {
   finalNote: string
   shortTermGoals: string[]
   longTermGoals: string[]
+  shortTermGoalStatuses: GoalStatus[]
+  longTermGoalStatuses: GoalStatus[]
 }
 
 export type IcfDomainKey = keyof IcfDomains

@@ -2,7 +2,7 @@
 
 import { createClient } from './server'
 import { revalidatePath } from 'next/cache'
-import type { IcfAssessment, IcfTurn, IcfDomains } from '@/features/icf/domain/types'
+import type { IcfAssessment, IcfTurn, IcfDomains, GoalStatus } from '@/features/icf/domain/types'
 
 type IcfRow = {
   id: string
@@ -13,6 +13,8 @@ type IcfRow = {
   final_note: string | null
   short_term_goals: string[] | null
   long_term_goals: string[] | null
+  short_term_goal_statuses: string[] | null
+  long_term_goal_statuses: string[] | null
   created_at: string
 }
 
@@ -55,6 +57,8 @@ export async function createIcfAssessment(
       final_note: input.finalNote,
       short_term_goals: input.shortTermGoals ?? [],
       long_term_goals: input.longTermGoals ?? [],
+      short_term_goal_statuses: input.shortTermGoalStatuses ?? [],
+      long_term_goal_statuses: input.longTermGoalStatuses ?? [],
     })
     .select()
     .single()
@@ -81,6 +85,8 @@ export async function updateIcfAssessment(
     finalNote?: string
     shortTermGoals?: string[]
     longTermGoals?: string[]
+    shortTermGoalStatuses?: GoalStatus[]
+    longTermGoalStatuses?: GoalStatus[]
   }
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient()
@@ -92,6 +98,8 @@ export async function updateIcfAssessment(
   if ('finalNote' in updates) dbUpdates.final_note = updates.finalNote
   if ('shortTermGoals' in updates) dbUpdates.short_term_goals = updates.shortTermGoals
   if ('longTermGoals' in updates) dbUpdates.long_term_goals = updates.longTermGoals
+  if ('shortTermGoalStatuses' in updates) dbUpdates.short_term_goal_statuses = updates.shortTermGoalStatuses
+  if ('longTermGoalStatuses' in updates) dbUpdates.long_term_goal_statuses = updates.longTermGoalStatuses
 
   const { error } = await supabase
     .from('icf_assessments')
@@ -140,6 +148,8 @@ function dbToIcf(dbRecord: IcfRow): IcfAssessment {
     finalNote: dbRecord.final_note ?? '',
     shortTermGoals: dbRecord.short_term_goals ?? [],
     longTermGoals: dbRecord.long_term_goals ?? [],
+    shortTermGoalStatuses: (dbRecord.short_term_goal_statuses ?? []) as GoalStatus[],
+    longTermGoalStatuses: (dbRecord.long_term_goal_statuses ?? []) as GoalStatus[],
     createdAt: dbRecord.created_at,
   }
 }

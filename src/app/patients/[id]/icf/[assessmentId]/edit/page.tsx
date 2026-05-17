@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { getIcfAssessments } from '@/lib/supabase/icf'
 import { updateIcfAssessment } from '@/lib/supabase/icf'
-import { DOMAIN_KEYS, DOMAIN_META, type IcfDomains, type IcfAssessment } from '@/features/icf/domain/types'
+import { DOMAIN_KEYS, DOMAIN_META, type IcfDomains, type IcfAssessment, type GoalStatus } from '@/features/icf/domain/types'
 import { LoadingScreen } from '@/components/loading-screen'
 
 type PageProps = { params: Promise<{ id: string; assessmentId: string }> }
@@ -27,6 +27,8 @@ export default function IcfEditPage({ params }: PageProps) {
   const [finalNote, setFinalNote] = useState('')
   const [shortTermGoals, setShortTermGoals] = useState<string[]>(['', '', ''])
   const [longTermGoals, setLongTermGoals] = useState<string[]>([''])
+  const [shortTermGoalStatuses, setShortTermGoalStatuses] = useState<GoalStatus[]>(['ongoing', 'ongoing', 'ongoing'])
+  const [longTermGoalStatuses, setLongTermGoalStatuses] = useState<GoalStatus[]>(['ongoing'])
   const [newItems, setNewItems] = useState<Record<string, string>>({})
   const [isSaving, setIsSaving] = useState(false)
 
@@ -43,6 +45,9 @@ export default function IcfEditPage({ params }: PageProps) {
         const st = found.shortTermGoals ?? []
         setShortTermGoals([st[0] ?? '', st[1] ?? '', st[2] ?? ''])
         setLongTermGoals([found.longTermGoals?.[0] ?? ''])
+        const sts = found.shortTermGoalStatuses ?? []
+        setShortTermGoalStatuses([sts[0] ?? 'ongoing', sts[1] ?? 'ongoing', sts[2] ?? 'ongoing'])
+        setLongTermGoalStatuses([found.longTermGoalStatuses?.[0] ?? 'ongoing'])
       }
     }
     load()
@@ -81,6 +86,8 @@ export default function IcfEditPage({ params }: PageProps) {
       finalNote,
       shortTermGoals: shortTermGoals.filter((g) => g.trim()),
       longTermGoals: longTermGoals.filter((g) => g.trim()),
+      shortTermGoalStatuses: shortTermGoalStatuses,
+      longTermGoalStatuses: longTermGoalStatuses,
     })
 
     setIsSaving(false)
@@ -232,17 +239,27 @@ export default function IcfEditPage({ params }: PageProps) {
           {shortTermGoals.map((goal, idx) => (
             <div key={idx} className="flex items-start gap-2">
               <span className="mt-2.5 text-[10px] font-bold text-muted-foreground w-4 shrink-0">{idx + 1}</span>
-              <Textarea
-                rows={2}
-                value={goal}
-                onChange={(e) => {
-                  const next = [...shortTermGoals]
-                  next[idx] = e.target.value
-                  setShortTermGoals(next)
-                }}
-                placeholder={`단기 목표 ${idx + 1}`}
-                className="text-sm resize-none"
-              />
+              <div className="flex flex-1 flex-col gap-1">
+                <Textarea
+                  rows={2}
+                  value={goal}
+                  onChange={(e) => {
+                    const next = [...shortTermGoals]
+                    next[idx] = e.target.value
+                    setShortTermGoals(next)
+                  }}
+                  placeholder={`단기 목표 ${idx + 1}`}
+                  className="text-sm resize-none"
+                />
+                <GoalStatusToggle
+                  value={shortTermGoalStatuses[idx] ?? 'ongoing'}
+                  onChange={(v) => {
+                    const next = [...shortTermGoalStatuses]
+                    next[idx] = v
+                    setShortTermGoalStatuses(next)
+                  }}
+                />
+              </div>
             </div>
           ))}
         </div>
@@ -257,6 +274,10 @@ export default function IcfEditPage({ params }: PageProps) {
             onChange={(e) => setLongTermGoals([e.target.value])}
             placeholder="장기 목표"
             className="text-sm resize-none"
+          />
+          <GoalStatusToggle
+            value={longTermGoalStatuses[0] ?? 'ongoing'}
+            onChange={(v) => setLongTermGoalStatuses([v])}
           />
         </div>
       </section>
@@ -283,6 +304,35 @@ export default function IcfEditPage({ params }: PageProps) {
           </Button>
         </div>
       </div>
+    </div>
+  )
+}
+
+function GoalStatusToggle({ value, onChange }: { value: GoalStatus; onChange: (v: GoalStatus) => void }) {
+  return (
+    <div className="flex gap-1.5">
+      <button
+        type="button"
+        onClick={() => onChange('ongoing')}
+        className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium border transition-colors ${
+          value === 'ongoing'
+            ? 'bg-amber-50 border-amber-300 text-amber-700'
+            : 'bg-muted border-transparent text-muted-foreground hover:border-muted-foreground/30'
+        }`}
+      >
+        진행중
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange('achieved')}
+        className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium border transition-colors ${
+          value === 'achieved'
+            ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+            : 'bg-muted border-transparent text-muted-foreground hover:border-muted-foreground/30'
+        }`}
+      >
+        달성됨
+      </button>
     </div>
   )
 }

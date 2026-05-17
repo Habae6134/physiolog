@@ -12,7 +12,7 @@ import { IcfDomainCard } from './IcfDomainCard'
 import { createIcfAssessment } from '@/lib/supabase/icf'
 import { getPatient } from '@/lib/supabase/patients'
 import { getEvaluations } from '@/lib/supabase/evaluations'
-import { mergeDomains, mergeRedFlags, DOMAIN_KEYS, type IcfTurn, type IcfAnalysisResult } from '@/features/icf/domain/types'
+import { mergeDomains, mergeRedFlags, DOMAIN_KEYS, type IcfTurn, type IcfAnalysisResult, type GoalStatus } from '@/features/icf/domain/types'
 import type { Patient } from '@/features/patients/domain/types'
 import type { Evaluation } from '@/features/evaluations/domain/types'
 
@@ -23,6 +23,7 @@ interface ApiMessage {
 
 interface Props {
   patientId: string
+  initialInput?: string
 }
 
 const TAG_CATEGORIES = [
@@ -50,10 +51,10 @@ const TAG_CATEGORIES = [
 
 type Status = 'idle' | 'loading' | 'result'
 
-export function IcfAssessmentForm({ patientId }: Props) {
+export function IcfAssessmentForm({ patientId, initialInput }: Props) {
   const router = useRouter()
   const [status, setStatus] = useState<Status>('idle')
-  const [input, setInput] = useState('')
+  const [input, setInput] = useState(initialInput ?? '')
   const [followUp, setFollowUp] = useState('')
   const [turns, setTurns] = useState<IcfTurn[]>([])
   const [history, setHistory] = useState<ApiMessage[]>([])
@@ -62,6 +63,8 @@ export function IcfAssessmentForm({ patientId }: Props) {
   const [evaluations, setEvaluations] = useState<Evaluation[]>([])
   const [shortTermGoals, setShortTermGoals] = useState<string[]>(['', '', ''])
   const [longTermGoals, setLongTermGoals] = useState<string[]>([''])
+  const [shortTermGoalStatuses, setShortTermGoalStatuses] = useState<GoalStatus[]>(['ongoing', 'ongoing', 'ongoing'])
+  const [longTermGoalStatuses, setLongTermGoalStatuses] = useState<GoalStatus[]>(['ongoing'])
   const [isGoalsGenerating, setIsGoalsGenerating] = useState(false)
   useEffect(() => {
     async function loadData() {
@@ -138,6 +141,8 @@ export function IcfAssessmentForm({ patientId }: Props) {
       finalNote: lastNote,
       shortTermGoals: filteredShort,
       longTermGoals: filteredLong,
+      shortTermGoalStatuses: shortTermGoalStatuses.slice(0, filteredShort.length),
+      longTermGoalStatuses: longTermGoalStatuses.slice(0, filteredLong.length),
     })
 
     if (result.success) {
@@ -157,6 +162,8 @@ export function IcfAssessmentForm({ patientId }: Props) {
     setCurrentResult(null)
     setShortTermGoals(['', '', ''])
     setLongTermGoals([''])
+    setShortTermGoalStatuses(['ongoing', 'ongoing', 'ongoing'])
+    setLongTermGoalStatuses(['ongoing'])
   }
 
   async function handleGenerateGoals() {
@@ -425,17 +432,27 @@ export function IcfAssessmentForm({ patientId }: Props) {
                 {shortTermGoals.map((goal, idx) => (
                   <div key={idx} className="flex items-start gap-2">
                     <span className="mt-2.5 text-[10px] font-bold text-muted-foreground w-4 shrink-0">{idx + 1}</span>
-                    <Textarea
-                      rows={2}
-                      value={goal}
-                      onChange={(e) => {
-                        const next = [...shortTermGoals]
-                        next[idx] = e.target.value
-                        setShortTermGoals(next)
-                      }}
-                      placeholder={`단기 목표 ${idx + 1}`}
-                      className="text-sm resize-none"
-                    />
+                    <div className="flex flex-1 flex-col gap-1">
+                      <Textarea
+                        rows={2}
+                        value={goal}
+                        onChange={(e) => {
+                          const next = [...shortTermGoals]
+                          next[idx] = e.target.value
+                          setShortTermGoals(next)
+                        }}
+                        placeholder={`단기 목표 ${idx + 1}`}
+                        className="text-sm resize-none"
+                      />
+                      <GoalStatusToggle
+                        value={shortTermGoalStatuses[idx] ?? 'ongoing'}
+                        onChange={(v) => {
+                          const next = [...shortTermGoalStatuses]
+                          next[idx] = v
+                          setShortTermGoalStatuses(next)
+                        }}
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -451,6 +468,10 @@ export function IcfAssessmentForm({ patientId }: Props) {
                   onChange={(e) => setLongTermGoals([e.target.value])}
                   placeholder="장기 목표"
                   className="text-sm resize-none"
+                />
+                <GoalStatusToggle
+                  value={longTermGoalStatuses[0] ?? 'ongoing'}
+                  onChange={(v) => setLongTermGoalStatuses([v])}
                 />
               </div>
             </motion.section>
@@ -474,6 +495,35 @@ export function IcfAssessmentForm({ patientId }: Props) {
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  )
+}
+
+function GoalStatusToggle({ value, onChange }: { value: GoalStatus; onChange: (v: GoalStatus) => void }) {
+  return (
+    <div className="flex gap-1.5">
+      <button
+        type="button"
+        onClick={() => onChange('ongoing')}
+        className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium border transition-colors ${
+          value === 'ongoing'
+            ? 'bg-amber-50 border-amber-300 text-amber-700'
+            : 'bg-muted border-transparent text-muted-foreground hover:border-muted-foreground/30'
+        }`}
+      >
+        진행중
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange('achieved')}
+        className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium border transition-colors ${
+          value === 'achieved'
+            ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+            : 'bg-muted border-transparent text-muted-foreground hover:border-muted-foreground/30'
+        }`}
+      >
+        달성됨
+      </button>
     </div>
   )
 }
