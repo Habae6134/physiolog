@@ -52,10 +52,11 @@ const TAG_CATEGORIES = [
 
 type Status = 'idle' | 'loading' | 'result'
 
-export function IcfAssessmentForm({ patientId, initialInput, previousAssessment }: Props) {
+export function IcfAssessmentForm({ patientId, initialInput: _initialInput, previousAssessment }: Props) {
   const router = useRouter()
   const [status, setStatus] = useState<Status>('idle')
-  const [input, setInput] = useState(initialInput ?? '')
+  const [input, setInput] = useState('')
+  const [prevExpanded, setPrevExpanded] = useState(false)
   const [followUp, setFollowUp] = useState('')
   const [turns, setTurns] = useState<IcfTurn[]>([])
   const [history, setHistory] = useState<ApiMessage[]>([])
@@ -206,6 +207,46 @@ export function IcfAssessmentForm({ patientId, initialInput, previousAssessment 
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col gap-3"
         >
+          {/* 이전 평가 참조 카드 (재평가 모드일 때만) */}
+          {previousAssessment && (() => {
+            const prevText = previousAssessment.turns.map((t) => t.input).join('\n\n')
+            return (
+              <div className="rounded-lg border border-blue-200 bg-blue-50/40 overflow-hidden">
+                {/* 헤더 */}
+                <button
+                  type="button"
+                  onClick={() => setPrevExpanded((v) => !v)}
+                  className="w-full flex items-center justify-between px-3 py-2.5 text-left"
+                >
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-semibold text-blue-700">이전 평가</span>
+                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-blue-100 border border-blue-300 text-blue-700">
+                      참조중
+                    </span>
+                    <span className="text-[10px] text-blue-600/70">{previousAssessment.date}</span>
+                    <div className="flex flex-wrap gap-1">
+                      {DOMAIN_KEYS.filter((k) => previousAssessment.finalDomains[k].length > 0).map((k) => (
+                        <span key={k} className={`px-1.5 py-0.5 rounded-full border text-[10px] font-medium ${DOMAIN_META[k].bg} ${DOMAIN_META[k].border} ${DOMAIN_META[k].color}`}>
+                          {DOMAIN_META[k].label} {previousAssessment.finalDomains[k].length}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-blue-500 shrink-0 ml-2">
+                    {prevExpanded ? '접기' : '펼치기'}
+                  </span>
+                </button>
+
+                {/* 이전 평가 텍스트 — 펼쳤을 때만 */}
+                {prevExpanded && prevText && (
+                  <div className="border-t border-blue-200 px-3 py-2.5 bg-blue-50/60">
+                    <p className="text-xs text-blue-800/80 leading-relaxed whitespace-pre-wrap">{prevText}</p>
+                  </div>
+                )}
+              </div>
+            )
+          })()}
+
           <div className="flex flex-col gap-1">
             <h2 className="text-sm font-semibold">
               {previousAssessment ? '재평가 내용 입력' : '초기 상담 내용 입력'}
@@ -216,19 +257,6 @@ export function IcfAssessmentForm({ patientId, initialInput, previousAssessment 
                 : '환자와의 초기 상담, 임상 관찰, 수행 관찰 내용을 자유롭게 적어주세요. AI가 5개 영역으로 분류합니다.'}
             </p>
           </div>
-
-          {previousAssessment && (
-            <div className="rounded-md border border-blue-200 bg-blue-50/60 px-3 py-2 text-xs text-blue-800 flex flex-col gap-1">
-              <p className="font-semibold">이전 평가 참조 중 ({previousAssessment.date})</p>
-              <div className="flex flex-wrap gap-1">
-                {DOMAIN_KEYS.filter((k) => previousAssessment.finalDomains[k].length > 0).map((k) => (
-                  <span key={k} className={`px-1.5 py-0.5 rounded-full border text-[10px] font-medium ${DOMAIN_META[k].bg} ${DOMAIN_META[k].border} ${DOMAIN_META[k].color}`}>
-                    {DOMAIN_META[k].label} {previousAssessment.finalDomains[k].length}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
 
           <div className="flex items-start gap-2 rounded-md border border-blue-100 bg-blue-50/60 px-3 py-2 text-xs text-blue-800">
             <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-500" />
