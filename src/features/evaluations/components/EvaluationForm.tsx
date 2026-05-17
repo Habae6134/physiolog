@@ -93,7 +93,7 @@ export function EvaluationForm({
         className="flex flex-col gap-5 pb-24"
       >
         <section className="flex flex-col gap-2">
-          <Label className="text-base font-semibold">평가 날짜</Label>
+          <Label className="text-base font-semibold">검사 날짜</Label>
           <Input
             type="date"
             className="max-w-[180px]"
@@ -142,7 +142,6 @@ export function EvaluationForm({
           title="통증"
           subtitle="통증 부위 및 양상 — VAS는 자동 산출"
           name="togglePainMapping"
-          required
         >
           <BodyMap
             value={form.watch('painMapping')}
