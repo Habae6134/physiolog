@@ -126,7 +126,7 @@ export async function updatePatient(id: string, updates: Partial<PatientInput>):
   if ('otherMedicalHistory' in updates) dbUpdates.other_medical_history = updates.otherMedicalHistory ?? null
   if ('diagnosis' in updates) dbUpdates.diagnosis = updates.diagnosis ?? null
   if ('surgeryHistory' in updates) dbUpdates.surgery_history = updates.surgeryHistory ?? null
-  if ('onsetDate' in updates) dbUpdates.onset_date = updates.onsetDate ?? null
+  if ('onsetDate' in updates) dbUpdates.onset_date = updates.onsetDate || null
   if ('insurance' in updates) dbUpdates.insurance = updates.insurance ?? null
   if ('notes' in updates) dbUpdates.notes = updates.notes ?? null
   if ('treatmentStartDate' in updates) dbUpdates.treatment_start_date = updates.treatmentStartDate ?? null

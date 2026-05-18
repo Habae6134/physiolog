@@ -60,6 +60,7 @@ export default function EditPatientPage({ params }: PageProps) {
     otherMedicalHistory: patient.otherMedicalHistory ?? '',
     diagnosis: patient.diagnosis,
     surgeryHistory: patient.surgeryHistory ?? '',
+    onsetDate: patient.onsetDate ?? '',
     insurance: patient.insurance,
     notes: patient.notes ?? '',
     treatmentStartDate: patient.treatmentStartDate,
