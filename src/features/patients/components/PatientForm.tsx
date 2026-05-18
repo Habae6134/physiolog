@@ -32,6 +32,7 @@ import {
 import { patientFormSchema, type PatientFormValues } from '@/features/patients/domain/schema'
 import { toISODate } from '@/lib/utils/date'
 import { Loader2 } from 'lucide-react'
+import { DateSelect } from '@/components/ui/date-select'
 
 type Props = {
   defaultValues?: Partial<PatientFormValues>
@@ -112,7 +113,7 @@ export function PatientForm({
                 <FormItem>
                   <FormLabel>생년월일 *</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <DateSelect value={field.value} onChange={field.onChange} minYear={1930} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -285,7 +286,7 @@ export function PatientForm({
               <FormItem>
                 <FormLabel>발병일 (Onset)</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <DateSelect value={field.value ?? ''} onChange={field.onChange} minYear={1930} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -299,7 +300,7 @@ export function PatientForm({
                 <FormItem>
                   <FormLabel>치료 시작일 *</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <DateSelect value={field.value} onChange={field.onChange} minYear={2000} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
