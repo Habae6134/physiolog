@@ -88,7 +88,7 @@ export async function createPatient(input: PatientInput): Promise<{ success: boo
       other_medical_history: input.otherMedicalHistory,
       diagnosis: input.diagnosis,
       surgery_history: input.surgeryHistory,
-      onset_date: input.onsetDate,
+      onset_date: input.onsetDate || null,
       insurance: input.insurance,
       notes: input.notes,
       treatment_start_date: input.treatmentStartDate,
