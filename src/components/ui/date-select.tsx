@@ -1,17 +1,25 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 
 interface Props {
   value?: string       // YYYY-MM-DD
   onChange: (value: string) => void
   minYear?: number
   maxYear?: number
-  placeholder?: boolean
 }
 
 function daysInMonth(year: number, month: number) {
   return new Date(year, month, 0).getDate()
+}
+
+function parse(value: string) {
+  const [y, m, d] = value ? value.split('-') : ['', '', '']
+  return {
+    year:  y ? parseInt(y, 10) : 0,
+    month: m ? parseInt(m, 10) : 0,
+    day:   d ? parseInt(d, 10) : 0,
+  }
 }
 
 export function DateSelect({
@@ -19,69 +27,78 @@ export function DateSelect({
   onChange,
   minYear = 1930,
   maxYear = new Date().getFullYear() + 1,
-  placeholder = true,
 }: Props) {
-  const [y, m, d] = value ? value.split('-') : ['', '', '']
-  const year  = y ? parseInt(y, 10) : 0
-  const month = m ? parseInt(m, 10) : 0
-  const day   = d ? parseInt(d, 10) : 0
+  const parsed = parse(value)
+  const [year,  setYear]  = useState(parsed.year)
+  const [month, setMonth] = useState(parsed.month)
+  const [day,   setDay]   = useState(parsed.day)
+
+  // 외부 value가 바뀔 때(초기 로드, 폼 리셋 등) 동기화
+  useEffect(() => {
+    const p = parse(value)
+    setYear(p.year)
+    setMonth(p.month)
+    setDay(p.day)
+  }, [value])
 
   const years  = useMemo(() => Array.from({ length: maxYear - minYear + 1 }, (_, i) => maxYear - i), [minYear, maxYear])
   const months = Array.from({ length: 12 }, (_, i) => i + 1)
   const maxDay = year && month ? daysInMonth(year, month) : 31
   const days   = Array.from({ length: maxDay }, (_, i) => i + 1)
 
-  function emit(nextYear: number, nextMonth: number, nextDay: number) {
-    if (!nextYear || !nextMonth || !nextDay) {
-      // 일부만 선택된 상태 — 빈 문자열로 유지
+  function emit(y: number, m: number, d: number) {
+    if (y && m && d) {
+      const clamped = Math.min(d, daysInMonth(y, m))
+      onChange(`${y}-${String(m).padStart(2, '0')}-${String(clamped).padStart(2, '0')}`)
+    } else {
       onChange('')
-      return
     }
-    const clamped = Math.min(nextDay, daysInMonth(nextYear, nextMonth))
-    onChange(
-      `${nextYear}-${String(nextMonth).padStart(2, '0')}-${String(clamped).padStart(2, '0')}`
-    )
   }
 
-  const selectClass =
-    'h-9 rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1'
+  const cls = 'h-9 rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1'
 
   return (
     <div className="flex gap-1.5">
       <select
         value={year || ''}
-        onChange={(e) => emit(parseInt(e.target.value) || 0, month, day)}
-        className={`${selectClass} flex-[3]`}
+        onChange={(e) => {
+          const y = parseInt(e.target.value) || 0
+          setYear(y)
+          emit(y, month, day)
+        }}
+        className={`${cls} flex-[3]`}
         aria-label="년도"
       >
-        {placeholder && <option value="">년도</option>}
-        {years.map((y) => (
-          <option key={y} value={y}>{y}년</option>
-        ))}
+        <option value="">년도</option>
+        {years.map((y) => <option key={y} value={y}>{y}년</option>)}
       </select>
 
       <select
         value={month || ''}
-        onChange={(e) => emit(year, parseInt(e.target.value) || 0, day)}
-        className={`${selectClass} flex-[2]`}
+        onChange={(e) => {
+          const m = parseInt(e.target.value) || 0
+          setMonth(m)
+          emit(year, m, day)
+        }}
+        className={`${cls} flex-[2]`}
         aria-label="월"
       >
-        {placeholder && <option value="">월</option>}
-        {months.map((m) => (
-          <option key={m} value={m}>{m}월</option>
-        ))}
+        <option value="">월</option>
+        {months.map((m) => <option key={m} value={m}>{m}월</option>)}
       </select>
 
       <select
         value={day || ''}
-        onChange={(e) => emit(year, month, parseInt(e.target.value) || 0)}
-        className={`${selectClass} flex-[2]`}
+        onChange={(e) => {
+          const d = parseInt(e.target.value) || 0
+          setDay(d)
+          emit(year, month, d)
+        }}
+        className={`${cls} flex-[2]`}
         aria-label="일"
       >
-        {placeholder && <option value="">일</option>}
-        {days.map((d) => (
-          <option key={d} value={d}>{d}일</option>
-        ))}
+        <option value="">일</option>
+        {days.map((d) => <option key={d} value={d}>{d}일</option>)}
       </select>
     </div>
   )
