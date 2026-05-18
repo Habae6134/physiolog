@@ -26,7 +26,7 @@ export function DateSelect({
   value = '',
   onChange,
   minYear = 1930,
-  maxYear = new Date().getFullYear() + 1,
+  maxYear = new Date().getFullYear(),
 }: Props) {
   const parsed = parse(value)
   const [year,  setYear]  = useState(parsed.year)
